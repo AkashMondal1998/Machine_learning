@@ -18,7 +18,6 @@ class Regression:
 
     def train(self,epochs,l_rate):
         for i in tqdm(range(epochs),delay=0.25,total=epochs,desc="Training Process"):
-            if i % 100 == 0: print(self._loss)
             self._loss.backward()
             with torch.no_grad():
                 self.w -= l_rate * self.w.grad
