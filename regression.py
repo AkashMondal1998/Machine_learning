@@ -39,7 +39,7 @@ class MultipleLinearRegression:
 
     @staticmethod
     def normalize(x):
-        std = torch.min(x, dim=0).values
+        std = torch.std(x, dim=0)
         mean = torch.mean(x, dim=0)
         x_norm = (x - mean) / std
         return x_norm, mean, std
