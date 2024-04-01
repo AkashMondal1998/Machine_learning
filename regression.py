@@ -1,6 +1,6 @@
 import torch.nn as nn
-import torch
 from torch.optim import Adam
+from tqdm import tqdm
 
 class LinearRegression(nn.Module):
     def __init__(self,in_features):
@@ -14,16 +14,13 @@ class LinearRegression(nn.Module):
 
 def train(epochs,x,y,model):
     optimizer = Adam(model.parameters())
-    l_loss = 0
     criterion = nn.MSELoss()
+    p_bar = tqdm(total=epochs, desc="Training", unit="epoch")
     for _ in range(epochs):
         optimizer.zero_grad()
         loss = criterion(model(x),y.reshape(-1,1))
-        l_loss = loss
         loss.backward()
         optimizer.step()
-    return l_loss
-
-
-def predict(x,w,b):
-    return torch.matmul(x,w.reshape(-1,1)) + b
+        p_bar.set_postfix({"Loss": loss.item()})
+        p_bar.update(1)
+    p_bar.close()
