@@ -1,45 +1,29 @@
+import torch.nn as nn
 import torch
-from tqdm import tqdm
+from torch.optim import Adam
+
+class LinearRegression(nn.Module):
+    def __init__(self,in_features):
+        super().__init__()
+        self.layer1 = nn.Linear(in_features,1)
+
+    def forward(self,x):
+        a1 = self.layer1(x)
+        return a1
 
 
-class MultipleLinearRegression:
-    def __init__(self, t_in, t_out):
-        self._in = t_in
-        self._out = t_out
-        self.w = torch.zeros(t_in.shape[1], requires_grad=True)
-        self.b = torch.tensor(0.0, requires_grad=True)
+def train(epochs,x,y,model):
+    optimizer = Adam(model.parameters())
+    l_loss = 0
+    criterion = nn.MSELoss()
+    for _ in range(epochs):
+        optimizer.zero_grad()
+        loss = criterion(model(x),y.reshape(-1,1))
+        l_loss = loss
+        loss.backward()
+        optimizer.step()
+    return l_loss
 
-    def __repr__(self) -> str:
-        return f"MultipleLinearRegression(weights={self.w},bias={self.b})"
 
-    @property
-    def _loss(self):
-        loss = 0.0
-        for i in range(self._in.shape[0]):
-            loss += torch.square(
-                (torch.dot(self._in[i], self.w) + self.b) - self._out[i]
-            )
-        return loss / (2 * self._in.shape[0])
-
-    def train(self, epochs, l_rate):
-        for _ in tqdm(range(epochs), delay=0.25, total=epochs, desc="Training Process"):
-            self._loss.backward()
-            with torch.no_grad():
-                self.w -= l_rate * self.w.grad
-                self.b -= l_rate * self.b.grad
-                self.w.grad.zero_()
-                self.b.grad.zero_()
-
-    def predict(self, x, y):
-        for i in range(x.shape[0]):
-            pred = torch.dot(x[i], self.w) + self.b
-            print(
-                f"Predicted {pred:0.2f}    Expected {y[i]}  Diff {torch.abs(pred - y[i])}"
-            )
-
-    @staticmethod
-    def normalize(x):
-        std = torch.std(x, dim=0)
-        mean = torch.mean(x, dim=0)
-        x_norm = (x - mean) / std
-        return x_norm, mean, std
+def predict(x,w,b):
+    return torch.matmul(x,w.reshape(-1,1)) + b
