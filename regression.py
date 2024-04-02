@@ -3,6 +3,9 @@ from torch.optim import Adam
 from tqdm import tqdm
 
 class LinearRegression(nn.Module):
+    """
+    Simple Linear Regression Model
+    """
     def __init__(self,in_features):
         super().__init__()
         self.layer1 = nn.Linear(in_features,1)
