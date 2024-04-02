@@ -11,12 +11,12 @@ class LinearRegression(nn.Module):
         self.layer1 = nn.Linear(in_features,1)
 
     def forward(self,x):
-        a1 = self.layer1(x)
-        return a1
+        x = self.layer1(x)
+        return x
 
 
-def train(epochs,x,y,model):
-    optimizer = Adam(model.parameters())
+def train(epochs,x,y,lr,model):
+    optimizer = Adam(model.parameters(),lr=lr)
     criterion = nn.MSELoss()
     p_bar = tqdm(total=epochs, desc="Training", unit="epoch")
     for _ in range(epochs):
