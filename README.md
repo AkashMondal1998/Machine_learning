@@ -9,15 +9,15 @@
 - Calculate gradient using auto back propagation
 
 
-
-
-
 ### Build neural network using numpy only
 ### Todo
 - Back propagation
-- Build activation functions
+
 
 ### Done
 - Neuron 
 - Layer of neurons
 - Forward pass
+- Sigmoid Activation function
+- ReLU Activation function
+- Mse loss function
