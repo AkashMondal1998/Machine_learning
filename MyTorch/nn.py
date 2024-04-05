@@ -31,10 +31,3 @@ class Layer:
         for neuron in self._neurons:
             acts.append(neuron(x))
         return np.concatenate(acts, axis=1)
-
-
-# Sigmoid activation function
-class Sigmoid:
-    def __call__(self, x):
-        max_x = np.max(x)
-        return np.exp(x - max_x) / (1 + np.exp(x - max_x))

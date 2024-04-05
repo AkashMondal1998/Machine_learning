@@ -18,4 +18,6 @@
 - Build activation functions
 
 ### Done
+- Neuron 
+- Layer of neurons
 - Forward pass
