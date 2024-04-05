@@ -11,7 +11,11 @@
 
 
 
-### Todo 
-#### Build neural network using numpy only
-- Do forward pass and back propagation
+
+### Build neural network using numpy only
+### Todo
+- Back propagation
 - Build activation functions
+
+### Done
+- Forward pass
