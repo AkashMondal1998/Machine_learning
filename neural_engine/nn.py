@@ -1,10 +1,11 @@
 import numpy as np
 
-# Base class
+
+# Base class for adding functionalities
 class Base:
     def __repr__(self):
-        layers = (f"({layer_name}): {layer}" for layer_name,layer in vars(self).items())
-        return self.__class__.__name__ + '(\n' + '\n'.join(layers) + '\n)'
+        layers = (f"({layer_name}): {layer}" for layer_name, layer in vars(self).items())
+        return self.__class__.__name__ + "(\n" + "\n".join(layers) + "\n)"
     
     def __call__(self, x):
         return self.forward(x)
@@ -41,7 +42,7 @@ class Layer:
 
     def __call__(self, x):
         if x.ndim != 2:
-            raise ValueError("Input must be a 2D matrix") 
+            raise ValueError("Input must be a 2D matrix")
         return np.concatenate(tuple(neuron(x) for neuron in self._neurons), axis=1)
 
 
@@ -59,7 +60,7 @@ class BCELoss:
     def __call__(self, x, y):
         if x.shape != y.shape:
             raise ValueError("mat1 and mat2 be must have same shape")
-        return np.mean(-y * np.log(x) + (1-y) * np.log(1-x))
+        return np.mean(-y * np.log(x) + (1 - y) * np.log(1 - x))
 
 
 # ReLU Activation
