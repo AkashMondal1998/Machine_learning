@@ -12,7 +12,7 @@
 ### Build neural network using numpy only
 ### Todo
 - Back propagation
-- Custom datatype for wrapping the 
+- Custom type for wrapping the numpy arrays
 
 ### Done
 - Neuron 
