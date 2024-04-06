@@ -12,42 +12,40 @@
 ### Build neural network using numpy only
 ### Todo
 - Back propagation
-
+- Custom datatype for wrapping the 
 
 ### Done
 - Neuron 
-- Layer of neurons
+- Layer
 - Forward pass
 - Sigmoid Activation function
 - ReLU Activation function
-- Mse loss function
+- MSE loss function
+- BCE loss function
 
 
 
 ### Forward pass and loss calucation using neural_engine
-#### Neural Network 
-``` 
-    from neural_engine import nn
+``` python
+from neural_engine import nn
 
-```
-```
-    class Net(Base):
-        def __init__(self, in_features):
-            self.l1 = nn.Layer(in_features, 3)
-            self.relu = nn.ReLU()
-            self.l2 = nn.Layer(3, 1)
-            self.sig = nn.Sigmoid()
+# Neural network using Layer
+class Net(nn.Base):
+    def __init__(self, in_features):
+        self.l1 = nn.Layer(in_features, 3)
+        self.relu = nn.ReLU()
+        self.l2 = nn.Layer(3, 1)
+        self.sig = nn.Sigmoid()
 
-        def forward(self, x):
-            x = self.relu(self.l1(x))
-            x = self.sig(self.l2(x))
-            return x
+    def forward(self, x):
+        x = self.relu(self.l1(x))
+        x = self.sig(self.l2(x))
+        return x
 
-    
-    model = Net(x_train.shape[1])
-```
-#### Loss Function
-```
-    loss_fn  = nn.BCELoss()
-    loss = loss_fn(model(x),y_train)
+# Instantiate the network    
+model = Net(x_train.shape[1])
+
+# Loss function
+loss_fn  = nn.BCELoss()
+loss = loss_fn(model(x_train),y_train)
 ```
