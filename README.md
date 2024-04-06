@@ -4,11 +4,6 @@
 - Handwirtten digits prediction using MNIST DATASET (Tensorflow and Pytorch)
 - Coffee Roasting Model (Tensorflow and Pytorch)
 
-
-### Extra:
-- Calculate gradient using auto back propagation
-
-
 ### Build neural network using numpy only
 ### Todo
 - Back propagation
