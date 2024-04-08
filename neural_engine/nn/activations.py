@@ -1,5 +1,6 @@
 import numpy as np
 
+
 # ReLU Activation
 class ReLU:
     def __call__(self, x):
