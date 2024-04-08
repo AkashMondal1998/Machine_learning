@@ -40,9 +40,17 @@ class Layer:
     def __repr__(self):
         return f"Layer(in_features = {self._in}, out_features = {len(self._neurons)})"
 
+    @property
+    def weight(self):
+        return np.concatenate(tuple(neuron._w for neuron in self._neurons),axis=1)
+    
+    @property
+    def bias(self):
+        return np.concatenate(tuple(neuron._b for neuron in self._neurons),axis=1)
+
     def __call__(self, x):
         if x.ndim != 2:
-            raise ValueError("Input must be a 2D matrix")
+            raise ValueError("Input must be a 2D matrix") 
         return np.concatenate(tuple(neuron(x) for neuron in self._neurons), axis=1)
 
 
