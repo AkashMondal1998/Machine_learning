@@ -38,4 +38,4 @@ class Layer:
     def __call__(self, x):
         if x.ndim != 2:
             raise ValueError("Input must be a 2D matrix")
-        return x @ self._w.T + self._b
+        return x @ self._w + self._b
