@@ -22,7 +22,7 @@
 
 ### Forward pass and loss calucation using neural_engine
 ``` python
-from neural_engine import nn
+import neural_engine.nn as nn
 
 # Neural network using Layer
 class Net(nn.Base):
