@@ -21,7 +21,7 @@ class BCELoss:
 # CrossEntropyLoss
 class CrossEntropyLoss:
     @staticmethod
-    def softmax(x):
+    def _softmax(x):
         """
         x is an m x n matrix containing the raw logits from the neural network
         Each row is the raw logits from a particular traning sample
@@ -38,9 +38,7 @@ class CrossEntropyLoss:
         Then apply the softmax activation on it
         Now we have the probabilities of the models
         """
-        y = y.reshape(
-            y.shape[0],
-        )
-        x = self.softmax(x)  # apply the softmax activation to the model output
+        y = y.flatten()
+        x = self._softmax(x)  # apply the softmax activation to the model output
         prob = x[np.arange(len(y)), y]
         return -np.log(prob + 1e-9)
