@@ -80,3 +80,28 @@ class Sigmoid:
 
     def __repr__(self):
         return f"Sigmoid()"
+
+# CrossEntropyLoss
+class CrossEntropyLoss:
+    @staticmethod
+    def softmax(x):
+        """
+        x is an m x n matrix containing the raw logits from the neural network
+        Each row is the raw logits from a particular traning sample
+        so we have to apply softmax activation to each row in this m x n matrix
+        """
+        max = np.max(x,axis=1,keepdims=True)
+        x_exp = np.exp(x-max)
+        x_exp_sum = np.sum(x_exp,axis=1,keepdims=True)
+        return x_exp/x_exp_sum
+    
+    def __call__(self,x,y):
+        """
+        Here we expect the raw logits from the neural network
+        Then apply the softmax activation on it 
+        Now we have the probabilities of the models
+        """
+        y = y.reshape(y.shape[0],)
+        x = self.softmax(x)  # apply the softmax activation to the model output
+        prob = x[np.arange(len(y)),y]
+        return -np.log(prob + 1e-9)
