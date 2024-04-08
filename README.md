@@ -10,7 +10,6 @@
 - Custom type for wrapping the numpy arrays
 
 ### Done
-- Neuron 
 - Layer
 - Forward pass
 - Sigmoid Activation function
