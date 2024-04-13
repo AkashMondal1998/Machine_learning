@@ -1,16 +1,15 @@
-import numpy as np
 from neural_engine import Tensor
 
 
 # Mean Squared error loss function
 class MSELoss:
-    def __call__(self, x, y):
+    def __call__(self, x: Tensor, y: Tensor):
         if x.shape != y.shape:
             raise ValueError("mat1 and mat2 be must have same shape")
-        return np.mean(np.square(x - y))
+        return (x - y).square()
 
 
-# Binary CrossEntropy Loss
+"""# Binary CrossEntropy Loss
 class BCELoss:
     def __call__(self, x: Tensor, y: Tensor):
         if x.shape != y.shape:
@@ -28,4 +27,4 @@ class CrossEntropyLoss:
     def __call__(self, x: Tensor, y: Tensor):
         x = self._softmax(x)
         loss = -x[np.arange(len(y)), y].log()
-        return loss.mean()
+        return loss.mean()"""
