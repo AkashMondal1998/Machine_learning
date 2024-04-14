@@ -1,5 +1,9 @@
-from neural_engine import Tensor
+from itertools import pairwise
+from typing import Generator
+
 import numpy as np
+
+from neural_engine import Tensor
 
 
 # Base class for adding functionalities
@@ -11,25 +15,32 @@ class Base:
     def __call__(self, x: Tensor):
         return self.forward(x)
 
-    def parameters(self):
+    def parameters(self) -> Generator[Tensor, None, None]:
         for layer in vars(self).values():
             if isinstance(layer, Layer):
                 yield layer._w
                 if layer._b is not None:
                     yield layer._b
 
+    # do not if this new implementation works or not
+    # for all scenarios
     def zero_grad(self):
-        for layer in vars(self).values():
-            if isinstance(layer, Layer):
-                layer._w.grad = np.zeros_like(layer._w.grad)
-                layer._b.grad = np.zeros_like(layer._b.grad)
+        """for layer in vars(self).values():
+        if isinstance(layer, Layer):
+            layer._w.grad = np.zeros_like(layer._w.grad)
+            layer._b.grad = np.zeros_like(layer._b.grad)"""
+
+        for w, b in pairwise(self.parameters()):
+            w.grad = np.zeros_like(w.grad)
+            b.grad = np.zeros_like(b.grad)
 
 
 # Layer for linear transformation
 class Layer:
-    def __init__(self, in_features, no_of_neurons, bias=True):
-        self._w = Tensor.random_sample((in_features, no_of_neurons))
-        self._b = Tensor.random_sample((no_of_neurons,)) if bias else None
+    def __init__(self, in_features: int, no_of_neurons: int, bias=True) -> None:
+        limit = np.sqrt(6 / (7000 + 7000))
+        self._w = Tensor.random_uniform(-limit, limit, (in_features, no_of_neurons))
+        self._b = Tensor.zeros(1, no_of_neurons) if bias else None
 
     def __repr__(self):
         return f"Layer(in_features = {self._w.shape[0]}, out_features = {(self._w.shape[1])}, requires_bias={True if self._b is not None else False})"
