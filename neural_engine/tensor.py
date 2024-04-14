@@ -2,16 +2,17 @@ import numpy as np
 
 
 class Tensor:
-    def __init__(self, data: np.ndarray, _childern=()) -> None:
-        self._data = data
+    def __init__(self, data, _childern=(), requires_grad=False) -> None:
+        self._data = np.array(data, dtype=np.float32)
         self._prev = set(_childern)
         self._backward = lambda: None
         self.grad = np.zeros_like(self._data, dtype=np.float32)
-        self.shape = data.shape
-        self.ndim = data.ndim
+        self.shape = self._data.shape
+        self.ndim = self._data.ndim
+        self._requires_grad = requires_grad
 
     def __repr__(self) -> str:
-        return f"Tensor({self._data},grad={self.grad})"
+        return f"Tensor({self._data},requires_grad={self._requires_grad})"
 
     def __getitem__(self, item):
         return self._data[item]
@@ -65,8 +66,8 @@ class Tensor:
         out = Tensor(self._data + other._data, (self, other))
 
         def _backward():
-            self.grad = self.grad + out.grad
-            other.grad = other.grad + out.grad
+            self.grad += out.grad.flatten()[: self.grad.size].reshape(self.grad.shape)
+            other.grad += out.grad.flatten()[: other.grad.size].reshape(other.grad.shape)
 
         out._backward = _backward
         return out
@@ -75,8 +76,8 @@ class Tensor:
         out = Tensor(self._data - other._data, (self, other))
 
         def _backward():
-            self.grad = self.grad + out.grad
-            other.grad = other.grad - out.grad
+            self.grad = self.grad + out.grad.flatten()[: self.grad.size].reshape(self.grad.shape)
+            other.grad = other.grad - out.grad.flatten()[: other.grad.size].reshape(other.grad.shape)
 
         out._backward = _backward
         return out
@@ -97,11 +98,7 @@ class Tensor:
         out = Tensor(compute_sigmoid(self._data), (self,))
 
         def _backward():
-            self.grad += (
-                compute_sigmoid(self._data)
-                * (1 - compute_sigmoid(self._data))
-                * out.grad
-            )
+            self.grad += compute_sigmoid(self._data) * (1 - compute_sigmoid(self._data)) * out.grad
 
         out._backward = _backward
         return out
@@ -116,9 +113,7 @@ class Tensor:
         return out
 
     def dot(self, other):
-        assert (
-            isinstance(other, Tensor) and other._data.ndim == 1 and self._data.ndim == 1
-        )
+        assert isinstance(other, Tensor) and other._data.ndim == 1 and self._data.ndim == 1
         out = Tensor(np.dot(self._data, other._data), (self, other))
 
         def _backward():
