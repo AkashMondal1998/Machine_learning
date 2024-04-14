@@ -1,6 +1,15 @@
 import numpy as np
 
 
+# A context for the saved Tensors
+class Context:
+    def __init__(self):
+        self.saved_tensors = []
+
+    def saved_for_backward(self, *tensors):
+        self.saved_tensors.extend(tensors)
+
+
 class Tensor:
     def __init__(self, data, _childern=(), requires_grad=False) -> None:
         self._data = np.array(data, dtype=np.float32)
@@ -10,54 +19,22 @@ class Tensor:
         self.shape = self._data.shape
         self.ndim = self._data.ndim
         self._requires_grad = requires_grad
+        self.dtype = self._data.dtype
 
     def __repr__(self) -> str:
         return f"Tensor({self._data},requires_grad={self._requires_grad})"
 
+    def __len__(self):
+        return len(self._data)
+
     def __getitem__(self, item):
         return self._data[item]
-
-    def exp(self):
-        out = Tensor(np.exp(self._data), (self,))
-
-        def _backward():
-            self.grad += out._data * out.grad
-
-        out._backward = _backward
-        return out
-
-    def log(self):
-        out = Tensor(np.log(self._data), (self,))
-
-        def _backward():
-            self.grad += (1 / self._data) * out.grad
-
-        out._backward = _backward
-        return out
 
     def __pow__(self, exponent):
         out = Tensor(self._data**exponent, (self,))
 
         def _backward():
             self.grad += exponent * (self._data ** (exponent - 1)) * out.grad
-
-        out._backward = _backward
-        return out
-
-    def square(self):
-        out = Tensor(self._data**2, (self,))
-
-        def _backward():
-            self.grad += 2.0 * self._data * out.grad
-
-        out._backward = _backward
-        return out
-
-    def sum(self):
-        out = Tensor(self._data.sum(), (self,))
-
-        def _backward():
-            self.grad[:] += 1.0 * out.grad
 
         out._backward = _backward
         return out
@@ -78,6 +55,62 @@ class Tensor:
         def _backward():
             self.grad = self.grad + out.grad.flatten()[: self.grad.size].reshape(self.grad.shape)
             other.grad = other.grad - out.grad.flatten()[: other.grad.size].reshape(other.grad.shape)
+
+        out._backward = _backward
+        return out
+
+    def __matmul__(self, other):
+        assert self._data.shape[1] == other._data.shape[0]
+        out = Tensor(self._data @ other._data, (self, other))
+
+        def _backward():
+            self.grad += out.grad @ other._data.T
+            other.grad += self._data.T @ out.grad
+
+        out._backward = _backward
+        return out
+
+    def __neg__(self):
+        out = Tensor(-self._data, (self,))
+
+        def _backward():
+            self.grad += -out.grad
+
+        out._backward = _backward
+        return out
+
+    def exp(self):
+        out = Tensor(np.exp(self._data), (self,))
+
+        def _backward():
+            self.grad += out._data * out.grad
+
+        out._backward = _backward
+        return out
+
+    def log(self):
+        out = Tensor(np.log(self._data), (self,))
+
+        def _backward():
+            self.grad += (1 / self._data) * out.grad
+
+        out._backward = _backward
+        return out
+
+    def square(self):
+        out = Tensor(self._data**2, (self,))
+
+        def _backward():
+            self.grad += 2.0 * self._data * out.grad
+
+        out._backward = _backward
+        return out
+
+    def sum(self):
+        out = Tensor(self._data.sum(), (self,))
+
+        def _backward():
+            self.grad[:] += 1.0 * out.grad
 
         out._backward = _backward
         return out
@@ -123,22 +156,19 @@ class Tensor:
         out._backward = _backward
         return out
 
-    def __matmul__(self, other):
-        assert self._data.shape[1] == other._data.shape[0]
-        out = Tensor(self._data @ other._data, (self, other))
+    def zeros(*shape, dtype=np.float32):
+        out = np.zeros(shape, dtype=dtype)
+        return Tensor(out)
 
-        def _backward():
-            self.grad += out.grad @ other._data.T
-            other.grad += self._data.T @ out.grad
-
-        out._backward = _backward
-        return out
+    def random_uniform(low=0.0, high=1.0, size=None):
+        out = np.random.uniform(low, high, size)
+        return Tensor(out)
 
     def rand(d1, d2):
         out = np.random.rand(d1, d2)
         return Tensor(out)
 
-    def random_sample(shape: tuple):
+    def random_sample(*shape):
         out = np.random.random_sample(shape)
         return Tensor(out)
 
