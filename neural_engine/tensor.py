@@ -133,16 +133,27 @@ class Tensor:
         out = Tensor(self._data @ other._data, (self, other))
 
         def _backward():
-            self.grad = out.grad @ other._data.T
-            other.grad = self._data.T @ out.grad
+            self.grad += out.grad @ other._data.T
+            other.grad += self._data.T @ out.grad
 
         out._backward = _backward
         return out
 
+    def rand(d1, d2):
+        out = np.random.rand(d1, d2)
+        return Tensor(out)
+
+    def random_sample(shape: tuple):
+        out = np.random.random_sample(shape)
+        return Tensor(out)
+
+    def numpy(self):
+        return self._data
+
     def backward(self):
         topo = []
         visited = set()
-        assert self._data.ndim == 0
+        assert self._data.ndim == 0, "Can call backward only on scalar Tensors"
 
         def build_topo(v):
             if v not in visited:
@@ -155,6 +166,3 @@ class Tensor:
         self.grad = np.array(1, dtype=np.float32)
         for node in reversed(topo):
             node._backward()
-
-    def numpy(self):
-        return self._data
