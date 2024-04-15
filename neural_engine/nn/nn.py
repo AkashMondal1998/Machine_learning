@@ -37,7 +37,7 @@ class Base:
 # Layer for linear transformation
 class Layer:
   def __init__(self, in_features: int, no_of_neurons: int, bias=True) -> None:
-    self._w = Tensor.normal(0.0, np.sqrt(2 / (in_features / no_of_neurons)), (in_features, no_of_neurons))
+    self._w = Tensor.normal(0.0, np.sqrt(2 / (in_features + no_of_neurons)), (in_features, no_of_neurons))
     self._b = Tensor.zeros(1, no_of_neurons) if bias else None
 
   def __repr__(self):
