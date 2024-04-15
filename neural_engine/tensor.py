@@ -47,10 +47,10 @@ class Tensor:
 
     def _backward():
       if isinstance(other, (int, float)):
-        self.grad = self.grad + out.grad.flatten()[: self.grad.size].reshape(self.grad.shape)
+        self.grad += out.grad.flatten()[: self.grad.size].reshape(self.grad.shape)
       else:
-        self.grad = self.grad + out.grad.flatten()[: self.grad.size].reshape(self.grad.shape)
-        other.grad = other.grad - out.grad.flatten()[: other.grad.size].reshape(other.grad.shape)
+        self.grad += (out.grad.size / self.grad.size) * out.grad.flatten()[: self.grad.size].reshape(self.grad.shape)
+        other.grad += (out.grad.size / other.grad.size) * out.grad.flatten()[: other.grad.size].reshape(other.grad.shape)
 
     out._backward = _backward
     return out
@@ -66,10 +66,10 @@ class Tensor:
 
     def _backward():
       if isinstance(other, (int, float)):
-        self.grad = self.grad + out.grad.flatten()[: self.grad.size].reshape(self.grad.shape)
+        self.grad += out.grad.flatten()[: self.grad.size].reshape(self.grad.shape)
       else:
-        self.grad = self.grad + out.grad.flatten()[: self.grad.size].reshape(self.grad.shape)
-        other.grad = other.grad - out.grad.flatten()[: other.grad.size].reshape(other.grad.shape)
+        self.grad += (out.grad.size / self.grad.size) * out.grad.flatten()[: self.grad.size].reshape(self.grad.shape)
+        other.grad -= (out.grad.size / other.grad.size) * out.grad.flatten()[: other.grad.size].reshape(other.grad.shape)
 
     out._backward = _backward
     return out
@@ -139,7 +139,7 @@ class Tensor:
     out = Tensor(self._data.sum(), (self,))
 
     def _backward():
-      self.grad[:] += 1.0 * out.grad
+      self.grad += out.grad
 
     out._backward = _backward
     return out
@@ -148,7 +148,7 @@ class Tensor:
     out = Tensor(self._data.mean(), (self,))
 
     def _backward():
-      self.grad[:] += (1.0 / self._data.size) * out.grad
+      self.grad += (1.0 / self._data.size) * out.grad
 
     out._backward = _backward
     return out
@@ -185,22 +185,6 @@ class Tensor:
     out._backward = _backward
     return out
 
-  def zeros(*shape, dtype=np.float32):
-    out = np.zeros(shape, dtype=dtype)
-    return Tensor(out)
-
-  def random_uniform(low=0.0, high=1.0, size=None):
-    out = np.random.uniform(low, high, size)
-    return Tensor(out)
-
-  def rand(d1, d2):
-    out = np.random.rand(d1, d2)
-    return Tensor(out)
-
-  def random_sample(*shape):
-    out = np.random.random_sample(shape)
-    return Tensor(out)
-
   def numpy(self):
     return self._data
 
@@ -220,3 +204,33 @@ class Tensor:
     self.grad = np.array(1, dtype=np.float32)
     for node in reversed(topo):
       node._backward()
+
+  @classmethod
+  def zeros(cls, *shape, dtype=np.float32):
+    out = np.zeros(shape, dtype=dtype)
+    return cls(out)
+
+  @classmethod
+  def zeros_like(cls, a, dtype=None):
+    out = np.zeros_like(a._data, dtype)
+    return cls(out)
+
+  @classmethod
+  def random_uniform(cls, low: float = 0.0, high: float = 1.0, size=None):
+    out = np.random.uniform(low, high, size)
+    return cls(out)
+
+  @classmethod
+  def rand(cls, d1, d2):
+    out = np.random.rand(d1, d2)
+    return cls(out)
+
+  @classmethod
+  def random_sample(cls, *shape):
+    out = np.random.random_sample(shape)
+    return cls(out)
+
+  @classmethod
+  def normal(cls, loc=0.0, scale=1.0, size=None):
+    out = np.random.normal(loc, scale, size)
+    return cls(out)
