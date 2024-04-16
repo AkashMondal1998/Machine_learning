@@ -1,3 +1,4 @@
+from __future__ import annotations
 from itertools import pairwise
 from typing import TYPE_CHECKING, Generator
 import numpy as np
@@ -13,10 +14,10 @@ class Base:
     modules = (f"({module_name}): {module}" for module_name, module in vars(self).items())
     return self.__class__.__name__ + "(\n    " + "\n    ".join(modules) + "\n)"
 
-  def __call__(self, x: Tensor):
+  def __call__(self, x: "Tensor"):
     return self.forward(x)
 
-  def parameters(self) -> Generator[Tensor, None, None]:
+  def parameters(self) -> Generator["Tensor", None, None]:
     for layer in vars(self).values():
       if isinstance(layer, Linear):
         yield layer._w
