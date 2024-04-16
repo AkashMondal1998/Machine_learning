@@ -1,4 +1,7 @@
-from minigrad import Tensor
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+  from minigrad import Tensor
 
 
 # Mean Squared error loss function
