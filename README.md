@@ -17,7 +17,7 @@
 
 
 
-### Forward pass and loss calucation using minigrad
+### Defining and training of a neural network using MiniGrad
 ``` python
 from minigrad import Tensor
 import minigrad.nn as nn
@@ -25,11 +25,11 @@ import minigrad.nn as nn
 # Neural network using Layer
 class Net(nn.Base):
     def __init__(self, in_features):
-        self.l1 = nn.Layer(in_features, 3)
-        self.l2 = nn.Layer(3, 1)
+        self.l1 = nn.Linear(in_features, 3)
+        self.l2 = nn.Linear(3, 1)
 
     def forward(self, x):
-        x = (self.l1(x)).relu()
+        x = self.l1(x).relu()
         x = self.l2(x)
         return x
 
