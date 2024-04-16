@@ -1,9 +1,4 @@
-# Jupyter Notebooks for machine learning algorithms
-### Models Done:
-- Handwirtten digits prediction using MNIST DATASET (Tensorflow and Pytorch)
-
-
-## Build neural network using numpy only
+# Minigrad
 
 ### TODO
 - Optimizers
@@ -22,10 +17,10 @@
 
 
 
-### Forward pass and loss calucation using neural_engine
+### Forward pass and loss calucation using minigrad
 ``` python
-from neural_engine import Tensor
-import neural_engine.nn as nn
+from minigrad import Tensor
+import minigrad.nn as nn
 
 # Neural network using Layer
 class Net(nn.Base):

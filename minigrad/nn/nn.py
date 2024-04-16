@@ -3,7 +3,7 @@ from typing import Generator
 
 import numpy as np
 
-from neural_engine import Tensor
+from minigrad import Tensor
 
 
 # Base class for adding functionalities
