@@ -1,15 +1,6 @@
 import numpy as np
 
 
-# A context for the saved Tensors
-class Context:
-  def __init__(self):
-    self.saved_tensors = []
-
-  def saved_for_backward(self, *tensors):
-    self.saved_tensors.extend(tensors)
-
-
 class Tensor:
   def __init__(self, data, _childern=(), requires_grad=False) -> None:
     self._data = np.array(data, dtype=np.float32)
@@ -55,35 +46,19 @@ class Tensor:
     out._backward = _backward
     return out
 
-  def __radd__(self, other):
-    return self + other
-
-  def __sub__(self, other):
+  def __mul__(self, other):
     if isinstance(other, (int, float)):
-      out = Tensor(self._data - other, (self,))
+      out = Tensor(self._data * other, (self,))
     else:
-      out = Tensor(self._data - other._data, (self, other))
+      assert self.shape == other.shape
+      out = Tensor(self._data * other._data, (self, other))
 
     def _backward():
       if isinstance(other, (int, float)):
-        self.grad += out.grad.flatten()[: self.grad.size].reshape(self.grad.shape)
+        self.grad = other * out.grad
       else:
-        self.grad += (out.grad.size / self.grad.size) * out.grad.flatten()[: self.grad.size].reshape(self.grad.shape)
-        other.grad -= (out.grad.size / other.grad.size) * out.grad.flatten()[: other.grad.size].reshape(other.grad.shape)
-
-    out._backward = _backward
-    return out
-
-  def __rsub__(self, other):
-    return self - other
-
-  def __mul__(self, other):
-    assert self.shape == other.shape
-    out = Tensor(self._data * other._data, (self, other))
-
-    def _backward():
-      self.grad += other._data * out.grad
-      out.grad += self._data * out.grad
+        self.grad += other._data * out.grad
+        out.grad += self._data * out.grad
 
     out._backward = _backward
     return out
@@ -99,14 +74,26 @@ class Tensor:
     out._backward = _backward
     return out
 
+  def __radd__(self, other):
+    return self + other
+
+  def __sub__(self, other):
+    return self + (-other)
+
+  def __rsub__(self, other):
+    return self + (-other)
+
+  def __rmul__(self, other):
+    return self * other
+
+  def __truediv__(self, other):
+    return self * other**-1
+
+  def __rtruediv__(self, other):
+    return other * self**-1
+
   def __neg__(self):
-    out = Tensor(-self._data, (self,))
-
-    def _backward():
-      self.grad += -out.grad
-
-    out._backward = _backward
-    return out
+    return -1 * self
 
   def exp(self):
     out = Tensor(np.exp(self._data), (self,))
@@ -126,17 +113,23 @@ class Tensor:
     out._backward = _backward
     return out
 
-  def square(self):
-    out = Tensor(self._data**2, (self,))
+  def maxmimum(self, value):
+    out = Tensor(np.maximum(self._data, value), (self,))
 
     def _backward():
-      self.grad += 2.0 * self._data * out.grad
+      self.grad += np.where(self._data > value, out.grad, 0)
 
     out._backward = _backward
     return out
 
-  def sum(self):
-    out = Tensor(self._data.sum(), (self,))
+  def square(self):
+    return self**2
+
+  def sqrt(self):
+    return self ** (1 / 2)
+
+  def sum(self, axis=None, keepdims=False):
+    out = Tensor(self._data.sum(axis=axis, keepdims=keepdims), (self,))
 
     def _backward():
       self.grad += out.grad
@@ -153,38 +146,42 @@ class Tensor:
     out._backward = _backward
     return out
 
+  def mean_sqaured_error(self, other):
+    return (self - other).square().mean()
+
+  def binary_crossentropy_withlogits(self, other):
+    return (self.maxmimum(0) - (self * other) + (1 + self.abs().neg().exp()).log()).mean()
+
+  def crossentropy_loss(self, other):
+    """class CrossEntropyLoss:
+    @staticmethod
+    def _softmax(x: Tensor):
+        exp_sum = x.exp().sum(axis=1, keepdims=True)
+        return x.exp() / exp_sum
+
+    def __call__(self, x: Tensor, y: Tensor):
+        x = self._softmax(x)
+        loss = -x[np.arange(len(y)), y].log()
+        return loss.mean()"""
+    pass
+
   def sigmoid(self):
-    def _sigmoid(x):
-      return 1 / (1 + np.exp(-x))
+    return 1 / (1 + self.neg().exp())
 
-    out = Tensor(_sigmoid(self._data), (self,))
+  def add(self, other):
+    return self.__add__(other)
 
-    def _backward():
-      self.grad += _sigmoid(self._data) * (1 - _sigmoid(self._data)) * out.grad
+  def sub(self, other):
+    return self.__sub__(other)
 
-    out._backward = _backward
-    return out
-
-  def maxmimum(self, value):
-    out = Tensor(np.maximum(self._data, value), (self,))
-
-    def _backward():
-      self.grad += np.where(self._data > value, out.grad, 0)
-
-    out._backward = _backward
-    return out
+  def mul(self, other):
+    return self.__mul__(other)
 
   def neg(self):
     return self.__neg__()
 
   def relu(self):
-    out = Tensor(np.maximum(0, self._data), (self,))
-
-    def _backward():
-      self.grad += np.where(self._data > 0, out.grad, 0)
-
-    out._backward = _backward
-    return out
+    return self.maxmimum(0)
 
   def abs(self):
     out = Tensor(np.abs(self._data), (self,))
