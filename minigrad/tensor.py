@@ -128,14 +128,21 @@ class Tensor:
   def sqrt(self):
     return self ** (1 / 2)
 
-  def sum(self, axis=None, keepdims=False):
-    out = Tensor(self._data.sum(axis=axis, keepdims=keepdims), (self,))
+  def sum(self, axis=None):
+    out = Tensor(np.sum(self._data, axis=axis, keepdims=True if axis else False), (self,))
 
     def _backward():
-      self.grad += out.grad
+      if not axis:
+        self.grad += out.grad
+      else:
+        t = np.repeat(out.grad, self._data.shape[axis]).reshape(self.grad.shape)
+        self.grad += np.where(self._data > 0, t, 0)
 
     out._backward = _backward
     return out
+
+  def softmax(self):
+    return self.exp() / self.exp().sum(axis=1)
 
   def mean(self):
     out = Tensor(self._data.mean(), (self,))
