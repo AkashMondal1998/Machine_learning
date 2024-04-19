@@ -5,20 +5,22 @@ if TYPE_CHECKING:
   from minigrad import Tensor
 
 
-# Mean Squared error loss function
 class MSELoss:
+  """Mean Squared error loss function"""
+
   def __call__(self, x: Tensor, y: Tensor):
     if x.shape != y.shape:
       raise ValueError("mat1 and mat2 be must have same shape")
     return (x - y).square().mean()
 
 
-# Binary CrossEntropy Loss
-class BCELoss:
+class BCEWithLogitsLoss:
+  """Binary CrossEntropy Loss with logits"""
+
   def __call__(self, x: Tensor, y: Tensor):
     if x.shape != y.shape:
       raise ValueError("mat1 and mat2 be must have same shape")
-    return (-y * x.log() - (1 - y) * (1 - x).log()).mean()
+    return (x.maxmimum(0) - (x * y) + (1 + x.abs().neg().exp()).log()).mean()
 
 
 """# CrossEntropyLoss
