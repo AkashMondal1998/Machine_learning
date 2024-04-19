@@ -50,15 +50,18 @@ class Tensor:
     if isinstance(other, (int, float)):
       out = Tensor(self._data * other, (self,))
     else:
-      assert self.shape == other.shape
       out = Tensor(self._data * other._data, (self, other))
 
     def _backward():
       if isinstance(other, (int, float)):
-        self.grad = other * out.grad
+        self.grad += other * out.grad
       else:
-        self.grad += other._data * out.grad
-        out.grad += self._data * out.grad
+        red_axis = None
+        for axis, (sizeA, sizeB) in enumerate(zip(self.shape, other.shape)):
+          if sizeA != sizeB:
+            red_axis = axis
+        self.grad += other._data * out.grad if self.shape == out.shape else np.sum(other._data * out.grad, axis=red_axis, keepdims=True)
+        other.grad += self._data * out.grad if other.shape == out.shape else np.sum(self._data * out.grad, axis=red_axis, keepdims=True)
 
     out._backward = _backward
     return out
