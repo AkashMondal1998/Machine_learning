@@ -1,4 +1,5 @@
 import numpy as np
+from .utils import _reduction
 
 
 class Tensor:
@@ -38,10 +39,11 @@ class Tensor:
 
     def _backward():
       if isinstance(other, (int, float)):
-        self.grad += out.grad.flatten()[: self.grad.size].reshape(self.grad.shape)
+        self.grad += out.grad
       else:
-        self.grad += (out.grad.size / self.grad.size) * out.grad.flatten()[: self.grad.size].reshape(self.grad.shape)
-        other.grad += (out.grad.size / other.grad.size) * out.grad.flatten()[: other.grad.size].reshape(other.grad.shape)
+        red_axis = _reduction(self, other)
+        self.grad += out.grad if self.shape == out.shape else np.sum(out.grad, axis=red_axis, keepdims=True)
+        other.grad += out.grad if other.shape == out.shape else np.sum(out.grad, axis=red_axis, keepdims=True)
 
     out._backward = _backward
     return out
@@ -56,10 +58,7 @@ class Tensor:
       if isinstance(other, (int, float)):
         self.grad += other * out.grad
       else:
-        red_axis = None
-        for axis, (sizeA, sizeB) in enumerate(zip(self.shape, other.shape)):
-          if sizeA != sizeB:
-            red_axis = axis
+        red_axis = _reduction(self, other)
         self.grad += other._data * out.grad if self.shape == out.shape else np.sum(other._data * out.grad, axis=red_axis, keepdims=True)
         other.grad += self._data * out.grad if other.shape == out.shape else np.sum(self._data * out.grad, axis=red_axis, keepdims=True)
 
