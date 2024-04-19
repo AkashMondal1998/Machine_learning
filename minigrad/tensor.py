@@ -154,22 +154,43 @@ class Tensor:
     return out
 
   def sigmoid(self):
-    def compute_sigmoid(x):
+    def _sigmoid(x):
       return 1 / (1 + np.exp(-x))
 
-    out = Tensor(compute_sigmoid(self._data), (self,))
+    out = Tensor(_sigmoid(self._data), (self,))
 
     def _backward():
-      self.grad += compute_sigmoid(self._data) * (1 - compute_sigmoid(self._data)) * out.grad
+      self.grad += _sigmoid(self._data) * (1 - _sigmoid(self._data)) * out.grad
 
     out._backward = _backward
     return out
+
+  def maxmimum(self, value):
+    out = Tensor(np.maximum(self._data, value), (self,))
+
+    def _backward():
+      self.grad += np.where(self._data > value, out.grad, 0)
+
+    out._backward = _backward
+    return out
+
+  def neg(self):
+    return self.__neg__()
 
   def relu(self):
     out = Tensor(np.maximum(0, self._data), (self,))
 
     def _backward():
       self.grad += np.where(self._data > 0, out.grad, 0)
+
+    out._backward = _backward
+    return out
+
+  def abs(self):
+    out = Tensor(np.abs(self._data), (self,))
+
+    def _backward():
+      self.grad += np.where(self._data < 0, -1, np.where(self._data > 0, 1, 0)) * out.grad
 
     out._backward = _backward
     return out
