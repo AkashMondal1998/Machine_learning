@@ -1,19 +1,18 @@
 # Minigrad
 
-### TODO
-- Optimizers
-- Auto weights and bias update during training
 
 
 ### Done
 - Tensor (wrapper for numpy arrays)
-- Layer
+- Dense Layer
 - Forward pass
 - Backward pass
 - Sigmoid Activation 
 - ReLU Activation 
 - MSE loss
 - BCE loss
+- Optimizer(SGD)
+- Auto udpate of parameters using optimizers
 
 
 
