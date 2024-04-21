@@ -37,6 +37,10 @@ class Tensor:
   def dtype(self):
     return self.data.dtype
 
+  @property
+  def ndim(self):
+    return self.data.ndim
+
   def __repr__(self):
     return f"Tensor({self.data})"
 
@@ -52,15 +56,25 @@ class Tensor:
   def __sub__(self, x):
     return self + (-x)
 
-  def mean(self):
-    div = Tensor(np.array([1 / self.data.size], dtype=self.data.dtype))
-    return self.sum().mul(div)
+  def __matmul__(self, x):
+    return self.dot(x)
+
+  def mean_squared_error(self, x):
+    return (self - x).square().mean()
+
+  @classmethod
+  def zeros(cls, *shape):
+    return cls(np.zeros(shape, dtype=np.float32))
+
+  @classmethod
+  def normal(cls, loc=0.1, scale=1.0, size=None):
+    return cls(np.random.normal(loc, scale, size))
 
   def backward(self, auto_fill=True):
-    if not self._ctx:
+    if self._ctx is None:
       return
 
-    if not self.grad and auto_fill:
+    if self.grad is None and auto_fill:
       assert self.data.size == 1
       self.grad = np.ones_like(self.data)
 
