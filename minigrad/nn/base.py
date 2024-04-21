@@ -23,9 +23,3 @@ class Base:
         yield module._w
         if module._b is not None:
           yield module._b
-
-  def zero_grad(self):
-    for w, b in pairwise(self.parameters()):
-      w.grad = np.zeros_like(w.grad)
-      if b is not None:
-        b.grad = np.zeros_like(b.grad)
