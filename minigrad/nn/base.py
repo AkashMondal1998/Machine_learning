@@ -1,6 +1,5 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Generator
-from .linear import Linear
+from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
   from minigrad import Tensor
@@ -14,10 +13,3 @@ class Base:
 
   def __call__(self, x: Tensor):
     return self.forward(x)
-
-  def parameters(self) -> Generator[Tensor, None, None]:
-    for module in vars(self).values():
-      if isinstance(module, Linear):
-        yield module._w
-        if module._b is not None:
-          yield module._b
