@@ -20,3 +20,4 @@ lint.select = [
 ]
 
 line-length = 150
+exclude = [".venv"]
