@@ -70,6 +70,10 @@ class Tensor:
   def normal(cls, loc=0.1, scale=1.0, size=None):
     return cls(np.random.normal(loc, scale, size))
 
+  @classmethod
+  def from_numpy(cls, array):
+    return cls(array.astype(float))
+
   def backward(self, auto_fill=True):
     if self._ctx is None:
       return
