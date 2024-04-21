@@ -10,6 +10,15 @@ class Tensor:
   def __repr__(self):
     return f"Tensor({self.data})"
 
+  def __add__(self, x):
+    return self.add(x)
+
+  def __neg__(self):
+    return self.neg()
+
+  def __sub__(self, x):
+    return self.sub(x)
+
   def backward(self):
     if not hasattr(self, "_ctx"):
       return
@@ -28,18 +37,17 @@ class Function:
   def save_for_backward(self, *x):
     self.saved_tensors.extend(x)
 
-  # for supporting unary ops have to do something
-  def apply(self, arg, tensor):
+  def apply(self, arg, *tensor):
     if type(self) == Tensor:
       op = arg
-      x = [self, tensor]
+      x = [self] + list(tensor)
     else:
       op = self
-      x = [arg, tensor]
+      x = [arg] + list(tensor)
     ctx = op()
-    out = Tensor(ctx.forward(ctx, x))
-    out._ctx = ctx
-    return out
+    ret = Tensor(ctx.forward(ctx, x))
+    ret._ctx = ctx
+    return ret
 
 
 def register(name, fnx):
@@ -90,3 +98,18 @@ class Sub(Function):
 
 
 register("sub", Sub)
+
+
+class Neg(Function):
+  @staticmethod
+  def forward(ctx, input):
+    (x,) = input
+    ctx.save_for_backward(x)
+    return -x.data
+
+  @staticmethod
+  def backward(ctx, grad_out):
+    return -1 * grad_out
+
+
+register("neg", Neg)
