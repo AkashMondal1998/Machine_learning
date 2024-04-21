@@ -54,7 +54,6 @@ class Tensor:
 
   def mean(self):
     div = Tensor(np.array([1 / self.data.size], dtype=self.data.dtype))
-    print(div)
     return self.sum().mul(div)
 
   def backward(self, auto_fill=True):
