@@ -1,7 +1,5 @@
 from __future__ import annotations
-from itertools import pairwise
 from typing import TYPE_CHECKING, Generator
-import numpy as np
 from .linear import Linear
 
 if TYPE_CHECKING:
