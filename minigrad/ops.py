@@ -154,8 +154,8 @@ class LogSoftMax(Function):
   @staticmethod
   def forward(ctx, x):
     def logsumexp(x):
-      c = x.max(axis=1)
-      return c + np.log(np.exp(x - c.reshape(-1, 1)).sum(axis=1, keepdims=True))
+      c = x.max(axis=1, keepdims=True)
+      return c + np.log(np.exp(x - c).sum(axis=1, keepdims=True))
 
     ret = x - logsumexp(x)
     ctx.save_for_backward(ret)
