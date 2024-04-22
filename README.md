@@ -1,4 +1,6 @@
 # Minigrad
+### Inspired by [Tinygrad](https://github.com/tinygrad/tinygrad)
+
 
 - Tensor (wrapper for numpy arrays)
 - Dense Layer
@@ -7,7 +9,7 @@
 - Sigmoid Activation 
 - ReLU Activation 
 - MSE loss
-- Optimizer(SGD)
+- Optimizer(SGD,Adam,RMSProp)
 
 
 
