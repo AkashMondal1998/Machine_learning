@@ -46,11 +46,13 @@ register("neg", Neg)
 class Sum(Function):
   @staticmethod
   def forward(ctx, x):
+    ctx.save_for_backward(x)
     return x.sum()
 
   @staticmethod
   def backward(ctx, grad_out):
-    return grad_out
+    (x,) = ctx.saved_tensors
+    return grad_out * np.ones_like(x)
 
 
 register("sum", Sum)
