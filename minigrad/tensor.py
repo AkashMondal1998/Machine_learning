@@ -93,7 +93,7 @@ class Tensor:
     if len(self._ctx.parents) == 1:
       grads = [grads]
     for t, g in zip(self._ctx.parents, grads):
-      t.grad = g
+      t.grad = g if t.grad is None else (t.grad + g)
       t.backward(False)
 
 

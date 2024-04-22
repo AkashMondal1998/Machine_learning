@@ -44,7 +44,7 @@ optim = SGD([model.l1.weight],lr=0.01)
 # traning the model
 epochs=100
 for _ in range(epochs):
-    optim.zero_grad() # zero the gradients (current implementation does not need this)
+    optim.zero_grad() # zero the grad
     loss = model(x_train).mean_squared_error(y_train)
     loss.backward()
     optim.step()   # upate the weights and bias
