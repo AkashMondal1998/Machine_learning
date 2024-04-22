@@ -44,6 +44,9 @@ class Tensor:
   def __repr__(self):
     return f"Tensor({self.data})"
 
+  def __getitem__(self, key):
+    return Tensor(self.data[key])
+
   def __add__(self, x):
     return self.add(x)
 
@@ -65,6 +68,10 @@ class Tensor:
   @classmethod
   def zeros(cls, *shape):
     return cls(np.zeros(shape, dtype=np.float32))
+
+  @classmethod
+  def eye(cls, n, m=None):
+    return cls(np.eye(n, m, dtype=np.float32))
 
   @classmethod
   def normal(cls, loc=0.1, scale=1.0, size=None):
