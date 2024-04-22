@@ -150,19 +150,21 @@ class Sigmoid(Function):
 register("sigmoid", Sigmoid)
 
 
-# Not done
 class LogSoftMax(Function):
   @staticmethod
-  def forward(ctx, x, y):
-    def _softmax(x):
-      return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
+  def forward(ctx, x):
+    def logsumexp(x):
+      c = x.max(axis=1)
+      return c + np.log(np.exp(x - c.reshape(-1, 1)).sum(axis=1, keepdims=True))
 
-    ret = _softmax(x)
-    ret = ret[np.arange(len(y)), y]
-    ctx.saved_for_backward(ret, y)
-    return -np.log(ret)
+    ret = x - logsumexp(x)
+    ctx.save_for_backward(ret)
+    return ret
 
   @staticmethod
   def backward(ctx, grad_out):
-    (ret, y) = ctx.saved_tensors
-    return ret * (1 - ret) * grad_out
+    (ret,) = ctx.saved_tensors
+    return grad_out - np.exp(ret) * grad_out.sum(axis=1, keepdims=True)
+
+
+register("logsoftmax", LogSoftMax)
