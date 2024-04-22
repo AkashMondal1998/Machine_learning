@@ -137,14 +137,32 @@ register("relu", Relu)
 class Sigmoid(Function):
   @staticmethod
   def forward(ctx, x):
-    ctx.save_for_backward(x)
-    return 1 / (1 + np.exp(-x))
+    ret = 1 / (1 + np.exp(-x))
+    ctx.save_for_backward(ret)
+    return ret
 
   @staticmethod
   def backward(ctx, grad_out):
-    (x,) = ctx.saved_tensors
-    sig = 1 / (1 + np.exp(-x))
-    return sig * (1 - sig) * grad_out
+    (ret,) = ctx.saved_tensors
+    return ret * (1 - ret) * grad_out
 
 
 register("sigmoid", Sigmoid)
+
+
+# Not done
+class LogSoftMax(Function):
+  @staticmethod
+  def forward(ctx, x, y):
+    def _softmax(x):
+      return np.exp(x) / np.sum(np.exp(x), axis=1, keepdims=True)
+
+    ret = _softmax(x)
+    ret = ret[np.arange(len(y)), y]
+    ctx.saved_for_backward(ret, y)
+    return -np.log(ret)
+
+  @staticmethod
+  def backward(ctx, grad_out):
+    (ret, y) = ctx.saved_tensors
+    return ret * (1 - ret) * grad_out
