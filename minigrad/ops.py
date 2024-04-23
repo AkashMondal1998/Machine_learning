@@ -115,7 +115,7 @@ class Relu(Function):
   @staticmethod
   def backward(ctx, grad_out):
     (x,) = ctx.saved_tensors
-    return np.where(x >= 0, 1, 0) * grad_out
+    return np.where(x > 0, 1, 0) * grad_out
 
 
 register("relu", Relu)
