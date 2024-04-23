@@ -62,6 +62,12 @@ class Tensor:
   def __matmul__(self, x):
     return self.dot(x)
 
+  def square(self):
+    return self * self
+
+  def abs(self):
+    return self.relu() + (-self).relu()
+
   def mean_squared_error(self, x):
     return (self - x).square().mean()
 

@@ -91,21 +91,6 @@ register("dot", Dot)
 register("matmul", Dot)
 
 
-class Square(Function):
-  @staticmethod
-  def forward(ctx, x):
-    ctx.save_for_backward(x)
-    return np.square(x)
-
-  @staticmethod
-  def backward(ctx, grad_out):
-    (x,) = ctx.saved_tensors
-    return 2 * x * grad_out
-
-
-register("square", Square)
-
-
 class Mean(Function):
   @staticmethod
   def forward(ctx, x):
@@ -130,7 +115,7 @@ class Relu(Function):
   @staticmethod
   def backward(ctx, grad_out):
     (x,) = ctx.saved_tensors
-    return np.where(x > 0, x, 0) * grad_out
+    return np.where(x >= 0, 1, 0) * grad_out
 
 
 register("relu", Relu)
