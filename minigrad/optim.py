@@ -12,13 +12,25 @@ class Optimizer:
 
 
 class SGD(Optimizer):
-  def __init__(self, parameters, lr=1e-3):
+  def __init__(self, parameters, lr=1e-3, momentum=0.0, nesterov=False):
     super().__init__(parameters)
     self.lr = lr
+    self.m = momentum
+    self.v = [np.zeros_like(t.data) for t in self.params]
+    self.nesterov = nesterov
 
   def step(self):
-    for param in self.params:
-      param.data -= self.lr * param.grad
+    if self.m == 0:
+      for param in self.params:
+        param.data -= self.lr * param.grad
+    if self.m > 0:
+      for i, param in enumerate(self.params):
+        self.v[i] = self.m * self.v[i] - self.lr * param.grad
+        param.data += self.v[i]
+    if self.m > 0 and self.nesterov:
+      for i, param in enumerate(self.params):
+        self.v[i] = self.m * self.v[i] - self.lr * param.grad
+        param.data += self.m * self.v[i] - self.lr * param.grad
 
 
 class RMSProp(Optimizer):
