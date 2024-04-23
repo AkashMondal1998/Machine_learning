@@ -11,5 +11,8 @@ class Base:
     modules = (f"({module_name}): {module}" for module_name, module in vars(self).items())
     return self.__class__.__name__ + "(\n    " + "\n    ".join(modules) + "\n)"
 
+  def parameters(self):
+    return [module._w for module in vars(self).values()]
+
   def __call__(self, x: Tensor):
     return self.forward(x)

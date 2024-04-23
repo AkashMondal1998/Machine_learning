@@ -74,8 +74,14 @@ class Tensor:
     return cls(np.eye(n, m, dtype=np.float32))
 
   @classmethod
-  def normal(cls, loc=0.1, scale=1.0, size=None):
-    return cls(np.random.normal(loc, scale, size))
+  def xavier_uniform(cls, in_features, out_features):
+    range = np.sqrt(6 / (in_features + out_features))
+    return cls(np.random.uniform(-range, +range, (in_features, out_features)))
+
+  @classmethod
+  def xavier_normal(cls, in_features, out_features):
+    scale = np.sqrt(2 / (in_features + out_features))
+    return cls(np.random.normal(0.0, scale, (in_features, out_features)))
 
   @classmethod
   def from_numpy(cls, array):
