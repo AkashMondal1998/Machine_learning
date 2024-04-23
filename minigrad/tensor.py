@@ -1,5 +1,4 @@
 import numpy as np
-from functools import partialmethod
 
 
 class Function:
@@ -7,20 +6,21 @@ class Function:
     self.parents = tensors
     self.saved_tensors = []
 
-  def save_for_backward(self, *x):
-    self.saved_tensors.extend(x)
+  def forward(self, *args, **kwargs):
+    raise NotImplementedError()
 
-  def apply(self, arg, *tensor):
-    if type(self) == Tensor:
-      op = arg
-      x = [self] + list(tensor)
-    else:
-      op = self
-      x = [arg] + list(tensor)
+  def backward(self, *args, **kwargs):
+    raise NotImplementedError()
+
+  @classmethod
+  def apply(op, *x, **kwargs):
     ctx = op(*x)
-    ret = Tensor(ctx.forward(ctx, *[t.data for t in x]))
+    ret = Tensor(op.forward(ctx, *[t.data for t in x], **kwargs))
     ret._ctx = ctx
     return ret
+
+
+from minigrad import ops
 
 
 class Tensor:
@@ -44,29 +44,47 @@ class Tensor:
   def __repr__(self):
     return f"Tensor({self.data})"
 
-  def __getitem__(self, key):
-    return Tensor(self.data[key])
+  def add(self, x):
+    return ops.Add.apply(self, x)
 
-  def __add__(self, x):
-    return self.add(x)
+  def neg(self):
+    return ops.Neg.apply(self)
 
-  def __mul__(self, x):
-    return self.mul(x)
+  def sub(self, x):
+    return self.add(x.neg())
 
-  def __neg__(self):
-    return self.neg()
+  def mul(self, x):
+    return ops.Mul.apply(self, x)
 
-  def __sub__(self, x):
-    return self + (-x)
+  def reshape(self, shape=None):
+    return ops.Reshape.apply(self, shape)
 
-  def __matmul__(self, x):
-    return self.dot(x)
+  def sum(self, axis=None):
+    return ops.Sum.apply(self, axis=axis)
+
+  def log(self):
+    return ops.Log.apply(self)
+
+  def dot(self, x):
+    return ops.Dot.apply(self, x)
+
+  def mean(self):
+    return ops.Mean.apply(self)
+
+  def relu(self):
+    return ops.Relu.apply(self)
+
+  def sigmoid(self):
+    return ops.Sigmoid.apply(self)
+
+  def logsoftmax(self):
+    return ops.LogSoftMax.apply(self)
 
   def square(self):
     return self * self
 
   def abs(self):
-    return self.relu() + (-self).relu()
+    return self.relu() + self.neg().relu()
 
   def mean_squared_error(self, x):
     return (self - x).square().mean()
@@ -93,25 +111,19 @@ class Tensor:
   def from_numpy(cls, array):
     return cls(array.astype(float))
 
-  def backward(self, auto_fill=True):
+  def backward(self, autofill=True):
     if self._ctx is None:
       return
 
-    if self.grad is None and auto_fill:
-      assert self.data.size == 1
+    if self.grad is None and autofill:
+      assert self.data.shape == tuple(), "Backward can only be called on the scalar tensors"
       self.grad = np.ones_like(self.data)
 
-    grads = self._ctx.backward(self._ctx, self.grad)
+    grads = self._ctx.backward(self.grad)
     if len(self._ctx.parents) == 1:
       grads = [grads]
+
     for t, g in zip(self._ctx.parents, grads):
+      assert t.shape == g.shape, f"{t.grad.shape} != {g.shape}"
       t.grad = g if t.grad is None else (t.grad + g)
       t.backward(False)
-
-
-def register(name, fnx):
-  setattr(Tensor, name, partialmethod(fnx.apply, fnx))
-
-
-# register the tensors ops
-import minigrad.ops  # noqa: F401
