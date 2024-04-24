@@ -19,6 +19,44 @@ class Mul(Function):
 
   def backward(self, grad_out):
     return self.y * grad_out, self.x * grad_out
+  
+
+class Div(Function):
+  def forward(self, x, y,reverse):
+    self.reverse = reverse
+    self.x = x
+    self.y = y
+    if not reverse: return x / y
+    else: return y / x
+
+  def backward(self, grad_out):
+    if not self.reverse: return self.y**-1 * grad_out, (self.x * -self.y**-2) * grad_out
+    else: return  (self.y * -self.x**-2) * grad_out, self.x**-1 * grad_out
+
+
+class Dot(Function):
+  def forward(self, x, y):
+    self.x = x
+    self.y = y
+    return x.dot(y)
+
+  def backward(self, grad_out):
+    x_grad = grad_out.dot(self.y.T)
+    y_grad = self.x.T.dot(grad_out)
+    return x_grad, y_grad
+
+
+class Maximum(Function):
+  def forward(self,x,y):
+    self.x = x
+    self.y = y
+    return np.maximum(x,y)
+  
+  def backward(self,grad_out):
+    grad_x = np.where(self.x > self.y,1,np.where(self.x < self.y,0,0.5))
+    grad_y = np.where(self.y > self.x,1,np.where(self.y < self.x,0,0.5))
+    return grad_x * grad_out ,grad_y * grad_out
+
 
 class Sum(Function):
   def forward(self, x, axis,keepdims):
@@ -43,6 +81,15 @@ class Neg(Function):
     return -grad_out
 
 
+class Exp(Function):
+  def forward(self,x):
+    self.x = x
+    return np.exp(x)
+  
+  def backward(self,grad_out):
+    return np.exp(self.x) * grad_out
+
+
 class Reshape(Function):
   def forward(self, x, shape):
     self.shape = x.shape
@@ -59,18 +106,6 @@ class Log(Function):
 
   def backward(self, grad_out):
     return (1 / self.x) * grad_out
-
-
-class Dot(Function):
-  def forward(self, x, y):
-    self.x = x
-    self.y = y
-    return x.dot(y)
-
-  def backward(self, grad_out):
-    x_grad = grad_out.dot(self.y.T)
-    y_grad = self.x.T.dot(grad_out)
-    return x_grad, y_grad
 
 
 class Mean(Function):
@@ -93,9 +128,12 @@ class Relu(Function):
 
 class Sigmoid(Function):
   def forward(self, x):
-    ret = 1 / (1 + np.exp(-x))
-    self.ret = ret
-    return ret
+    self.ret = np.piecewise(
+        x,
+        [x > 0],
+        [lambda i: 1 / (1 + np.exp(-i)), lambda i: np.exp(i) / (1 + np.exp(i))],
+    )
+    return self.ret
 
   def backward(self, grad_out):
     return self.ret * (1 - self.ret) * grad_out
@@ -113,5 +151,4 @@ class LogSoftMax(Function):
 
   def backward(self, grad_out):
     return grad_out - np.exp(self.ret) * grad_out.sum(axis=1, keepdims=True)
-
-
+  

@@ -1,6 +1,5 @@
 import numpy as np
 
-
 class Function:
   def __init__(self, *tensors):
     self.parents = tensors
@@ -20,7 +19,6 @@ class Function:
 
 from minigrad import ops
 
-
 class Tensor:
   def __init__(self, data, requires_grad=False):
     self.data = np.array(data, dtype=np.float32)
@@ -39,19 +37,23 @@ class Tensor:
 
   def __repr__(self): return f"Tensor({self.data},requires_grad={self.requires_grad})"
 
-  def add(self, x): return ops.Add.apply(self, x)
+  def add(self, x): return ops.Add.apply(self, self._const(x))
 
   def neg(self): return ops.Neg.apply(self)
 
-  def sub(self, x): return self.add(x.neg())
+  def sub(self, x): return self + (self._const(x)).neg()
 
-  def mul(self, x): return ops.Mul.apply(self, x)
+  def mul(self, x): return ops.Mul.apply(self, self._const(x))
+
+  def div(self,x,reverse=False): return ops.Div.apply(self, self._const(x),reverse=reverse)
 
   def reshape(self, shape=None): return ops.Reshape.apply(self, shape=shape)
 
   def sum(self, axis=None,keepdims=False): return ops.Sum.apply(self, axis=axis,keepdims=keepdims)
 
   def log(self): return ops.Log.apply(self)
+  
+  def exp(self): return ops.Exp.apply(self)
 
   def dot(self, x): return ops.Dot.apply(self, x)
 
@@ -67,7 +69,12 @@ class Tensor:
 
   def abs(self): return self.relu() + self.neg().relu()
 
+  def maximum(self,x): return ops.Maximum.apply(self,self._const_val(x))
+
   def mean_squared_error(self, x): return (self.sub(x)).square().mean()
+
+  def binary_crossentropy_withlogits(self,x):
+    return (self.maximum(0) - (self * x) + (1 + self.abs().neg().exp()).log()).mean()
 
   @classmethod
   def zeros(cls, *shape): return cls(np.zeros(shape, dtype=np.float32))
@@ -104,11 +111,26 @@ class Tensor:
         t.grad = g if t.grad is None else (t.grad + g)
         t.backward(False)
 
+  def _const(self,val):
+    if isinstance(val,(int,float)): return Tensor(np.full_like(self.data,val),requires_grad=False)
+    else: return val
+
+
   def __add__(self,x): return self.add(x)
+
+  def __radd__(self,x): return self.add(x)
   
   def __sub__(self,x): return self.sub(x)
+
+  def __rsub__(self,x): return self.sub(x)
   
   def __mul__(self,x): return self.mul(x)
+
+  def __rmul__(self,x): return self.mul(x)
+
+  def __truediv__(self,x): return self.div(x)
+
+  def __rtruediv__(self,x): return self.div(x,True)
   
   def __matmul__(self,x): return self.dot(x)
   
