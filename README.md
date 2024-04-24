@@ -1,16 +1,5 @@
 # Minigrad
-### Inspired by [Tinygrad](https://github.com/tinygrad/tinygrad)
-
-
-- Tensor (wrapper for numpy arrays)
-- Dense Layer
-- Forward pass
-- Backward pass
-- Sigmoid Activation 
-- ReLU Activation 
-- MSE loss
-- Optimizer(SGD,Adam,RMSProp)
-
+### Inspired by [Tinygrad](https://github.com/tinygrad/tinygrad) and [Micrograd](https://github.com/karpathy/micrograd)
 
 
 ### A simple linear regression model using MiniGrad
@@ -23,13 +12,10 @@ import minigrad.nn as nn
 class Net(nn.Base):
     def __init__(self):
         self.l1 = nn.Linear(2,1) # initializes weights to xavier uniform
-        self.l1.weight = Tensor.xavier_normal(2,1)  # can set to xavier normal if required
+        self.l1.weight = Tensor.xavier_normal(2,1,requires_grad=True)  # can set to xavier normal if required
 
     def forward(self,x):
         return self.l1(x)
-
-model = Net()
-
 
 # sample training data
 x_train = Tensor([[2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8]])

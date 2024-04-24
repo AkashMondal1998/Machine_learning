@@ -1,4 +1,5 @@
 from .tensor import Function
+from .helpers import _expand
 import numpy as np
 
 
@@ -19,14 +20,19 @@ class Mul(Function):
   def backward(self, grad_out):
     return self.y * grad_out, self.x * grad_out
 
-
 class Sum(Function):
-  def forward(self, x, axis):
+  def forward(self, x, axis,keepdims):
+    self.axis = axis
     self.x = x
-    return x.sum()
+    self.shape = x.shape
+    self.keepdims = keepdims
+    return x.sum(axis=axis,keepdims=keepdims)
 
   def backward(self, grad_out):
-    return grad_out * np.ones_like(self.x)
+    if self.axis: 
+      return np.ones_like(self.x) * _expand(grad_out,self.shape,self.axis,self.keepdims)
+    else: 
+      return np.ones_like(self.x) * grad_out 
 
 
 class Neg(Function):
@@ -107,3 +113,5 @@ class LogSoftMax(Function):
 
   def backward(self, grad_out):
     return grad_out - np.exp(self.ret) * grad_out.sum(axis=1, keepdims=True)
+
+

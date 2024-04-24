@@ -4,18 +4,16 @@ import numpy as np
 class Function:
   def __init__(self, *tensors):
     self.parents = tensors
-    self.saved_tensors = []
+    self.requires_grad = any(t.requires_grad for t in tensors)
 
-  def forward(self, *args, **kwargs):
-    raise NotImplementedError()
+  def forward(self, *args, **kwargs): raise NotImplementedError()
 
-  def backward(self, *args, **kwargs):
-    raise NotImplementedError()
+  def backward(self, *args, **kwargs): raise NotImplementedError()
 
   @classmethod
   def apply(op, *x, **kwargs):
     ctx = op(*x)
-    ret = Tensor(op.forward(ctx, *[t.data for t in x], **kwargs))
+    ret = Tensor(op.forward(ctx, *[t.data for t in x], **kwargs), requires_grad=ctx.requires_grad)
     ret._ctx = ctx
     return ret
 
@@ -24,106 +22,96 @@ from minigrad import ops
 
 
 class Tensor:
-  def __init__(self, data):
+  def __init__(self, data, requires_grad=False):
     self.data = np.array(data, dtype=np.float32)
     self.grad = None
     self._ctx = None
+    self.requires_grad = requires_grad
 
   @property
-  def shape(self):
-    return self.data.shape
+  def shape(self): return self.data.shape
 
   @property
-  def dtype(self):
-    return self.data.dtype
+  def dtype(self): return self.data.dtype
 
-  @property
-  def ndim(self):
-    return self.data.ndim
+  @property 
+  def ndim(self): return self.data.ndim
 
-  def __repr__(self):
-    return f"Tensor({self.data})"
+  def __repr__(self): return f"Tensor({self.data},requires_grad={self.requires_grad})"
 
-  def add(self, x):
-    return ops.Add.apply(self, x)
+  def add(self, x): return ops.Add.apply(self, x)
 
-  def neg(self):
-    return ops.Neg.apply(self)
+  def neg(self): return ops.Neg.apply(self)
 
-  def sub(self, x):
-    return self.add(x.neg())
+  def sub(self, x): return self.add(x.neg())
 
-  def mul(self, x):
-    return ops.Mul.apply(self, x)
+  def mul(self, x): return ops.Mul.apply(self, x)
 
-  def reshape(self, shape=None):
-    return ops.Reshape.apply(self, shape)
+  def reshape(self, shape=None): return ops.Reshape.apply(self, shape=shape)
 
-  def sum(self, axis=None):
-    return ops.Sum.apply(self, axis=axis)
+  def sum(self, axis=None,keepdims=False): return ops.Sum.apply(self, axis=axis,keepdims=keepdims)
 
-  def log(self):
-    return ops.Log.apply(self)
+  def log(self): return ops.Log.apply(self)
 
-  def dot(self, x):
-    return ops.Dot.apply(self, x)
+  def dot(self, x): return ops.Dot.apply(self, x)
 
-  def mean(self):
-    return ops.Mean.apply(self)
+  def mean(self): return ops.Mean.apply(self)
 
-  def relu(self):
-    return ops.Relu.apply(self)
+  def relu(self): return ops.Relu.apply(self)
 
-  def sigmoid(self):
-    return ops.Sigmoid.apply(self)
+  def sigmoid(self): return ops.Sigmoid.apply(self)
 
-  def logsoftmax(self):
-    return ops.LogSoftMax.apply(self)
+  def log_softmax(self): return ops.LogSoftMax.apply(self)
 
-  def square(self):
-    return self * self
+  def square(self): return self * self
 
-  def abs(self):
-    return self.relu() + self.neg().relu()
+  def abs(self): return self.relu() + self.neg().relu()
 
-  def mean_squared_error(self, x):
-    return (self - x).square().mean()
+  def mean_squared_error(self, x): return (self.sub(x)).square().mean()
 
   @classmethod
-  def zeros(cls, *shape):
-    return cls(np.zeros(shape, dtype=np.float32))
+  def zeros(cls, *shape): return cls(np.zeros(shape, dtype=np.float32))
 
   @classmethod
-  def eye(cls, n, m=None):
-    return cls(np.eye(n, m, dtype=np.float32))
+  def eye(cls, n, m=None, requires_grad=False): return cls(np.eye(n, m, dtype=np.float32), requires_grad=requires_grad)
 
   @classmethod
-  def xavier_uniform(cls, in_features, out_features):
+  def xavier_uniform(cls, in_features, out_features, requires_grad=False):
     range = np.sqrt(6 / (in_features + out_features))
-    return cls(np.random.uniform(-range, +range, (in_features, out_features)))
+    return cls(np.random.uniform(-range, +range, (in_features, out_features)), requires_grad=requires_grad)
 
   @classmethod
-  def xavier_normal(cls, in_features, out_features):
+  def xavier_normal(cls, in_features, out_features, requires_grad=False):
     scale = np.sqrt(2 / (in_features + out_features))
-    return cls(np.random.normal(0.0, scale, (in_features, out_features)))
+    return cls(np.random.normal(0.0, scale, (in_features, out_features)), requires_grad=requires_grad)
 
   @classmethod
-  def from_numpy(cls, array):
-    return cls(array.astype(float))
+  def from_numpy(cls, array): return cls(array.astype(float))
 
   def backward(self, autofill=True):
-    if self._ctx is None:
-      return
+    if not self.requires_grad or not self._ctx: return
 
     if self.grad is None and autofill:
       assert self.data.shape == tuple(), "Backward can only be called on the scalar tensors"
       self.grad = np.ones_like(self.data)
 
     grads = self._ctx.backward(self.grad)
-    if len(self._ctx.parents) == 1:
-      grads = [grads]
+    grads = [grads] if len(self._ctx.parents) == 1 else grads
 
     for t, g in zip(self._ctx.parents, grads):
-      assert t.shape == g.shape, f"{t.grad.shape} != {g.shape}"
-      t.grad = g if t.grad is None else (t.grad + g)
-      t.backward(False)
+      assert t.shape == g.shape, f"{t.shape} != {g.shape}"
+      if t.requires_grad:
+        t.grad = g if t.grad is None else (t.grad + g)
+        t.backward(False)
+
+  def __add__(self,x): return self.add(x)
+  
+  def __sub__(self,x): return self.sub(x)
+  
+  def __mul__(self,x): return self.mul(x)
+  
+  def __matmul__(self,x): return self.dot(x)
+  
+  def __neg__(self): return self.neg()
+
+  
