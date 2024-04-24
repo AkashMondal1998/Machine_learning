@@ -10,6 +10,17 @@ class Add(Function):
   def backward(self, grad_out):
     return grad_out, grad_out
 
+class Sub(Function):
+  def forward(self,x,y,reverse):
+    self.reverse = reverse
+    if not reverse: return x - y
+    else: return y - x
+  
+  def backward(self,grad_out):
+    if not self.reverse: 
+      return grad_out, -grad_out
+    else: 
+      return -grad_out, grad_out
 
 class Mul(Function):
   def forward(self, x, y):
@@ -17,7 +28,7 @@ class Mul(Function):
     self.y = y
     return x * y
 
-  def backward(self, grad_out):
+  def backward(self, grad_out): 
     return self.y * grad_out, self.x * grad_out
   
 
@@ -30,8 +41,10 @@ class Div(Function):
     else: return y / x
 
   def backward(self, grad_out):
-    if not self.reverse: return self.y**-1 * grad_out, (self.x * -self.y**-2) * grad_out
-    else: return  (self.y * -self.x**-2) * grad_out, self.x**-1 * grad_out
+    if not self.reverse: 
+      return self.y**-1 * grad_out, (self.x * -self.y**-2) * grad_out
+    else: 
+      return  (self.y * -self.x**-2) * grad_out, self.x**-1 * grad_out
 
 
 class Dot(Function):
@@ -67,17 +80,15 @@ class Sum(Function):
     return x.sum(axis=axis,keepdims=keepdims)
 
   def backward(self, grad_out):
-    if self.axis: 
-      return np.ones_like(self.x) * _expand(grad_out,self.shape,self.axis,self.keepdims)
-    else: 
-      return np.ones_like(self.x) * grad_out 
+    if self.axis: return np.ones_like(self.x) * _expand(grad_out,self.shape,self.axis,self.keepdims)
+    else: return np.ones_like(self.x) * grad_out 
 
 
 class Neg(Function):
-  def forward(self, x):
+  def forward(self, x): 
     return -x
 
-  def backward(self, grad_out):
+  def backward(self, grad_out): 
     return -grad_out
 
 
@@ -149,6 +160,6 @@ class LogSoftMax(Function):
     self.ret = ret
     return ret
 
-  def backward(self, grad_out):
+  def backward(self, grad_out): 
     return grad_out - np.exp(self.ret) * grad_out.sum(axis=1, keepdims=True)
   

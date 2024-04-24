@@ -41,11 +41,11 @@ class Tensor:
 
   def neg(self): return ops.Neg.apply(self)
 
-  def sub(self, x): return self + (self._const(x)).neg()
-
-  def mul(self, x): return ops.Mul.apply(self, self._const(x))
+  def sub(self,x,reverse=False): return ops.Sub.apply(self, self._const(x),reverse=reverse)
 
   def div(self,x,reverse=False): return ops.Div.apply(self, self._const(x),reverse=reverse)
+
+  def mul(self, x): return ops.Mul.apply(self, self._const(x))
 
   def reshape(self, shape=None): return ops.Reshape.apply(self, shape=shape)
 
@@ -122,7 +122,7 @@ class Tensor:
   
   def __sub__(self,x): return self.sub(x)
 
-  def __rsub__(self,x): return self.sub(x)
+  def __rsub__(self,x): return self.sub(x,True)
   
   def __mul__(self,x): return self.mul(x)
 
