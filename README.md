@@ -2,39 +2,51 @@
 ### Inspired by [Tinygrad](https://github.com/tinygrad/tinygrad) and [Micrograd](https://github.com/karpathy/micrograd)
 
 
-### A simple linear regression model using MiniGrad
+### Mnist classification using MiniGrad
 ``` python
 from minigrad import Tensor
-from minigrad.optim import SGD
 import minigrad.nn as nn
+from minigrad.nn import get_mnist,Adam
+import numpy as np
+from tqdm import trange
+
 
 # Neural network 
 class Net(nn.Base):
     def __init__(self):
-        self.l1 = nn.Linear(2,1) # initializes weights to xavier uniform
-        self.l1.weight = Tensor.xavier_normal(2,1,requires_grad=True)  # can set to xavier normal if required
-
+        self.l1 = nn.Linear(784,128)
+        self.l2 = nn.Linear(128,10)
+        
     def forward(self,x):
-        return self.l1(x)
+        x = self.l1(x).relu()
+        x = self.l2(x)
+        return x
 
-# sample training data
-x_train = Tensor([[2, 3], [3, 4], [4, 5], [5, 6], [6, 7], [7, 8]])
-y_train = Tensor([[10], [12], [14], [16], [18], [20]])
+#load the mnsit dataset
+X_train,Y_train,X_test,Y_test = get_mnist()
+Y_one_hot = np.eye(np.max(self.Y_train) + 1)[self.Y_train] # sparse_categorical_crossentropy expects one hot encoded matrix
 
-# instantiate the network    
-model = Net()
-
-# forward pass
-model(x)
 
 # optimizer
-optim = SGD(model.parameters(),lr=0.01)
+optimizer = Adam(self.model.parameters())
 
 # traning the model
-epochs=100
-for _ in range(epochs):
-    optim.zero_grad() # zero the grad
-    loss = model(x_train).mean_squared_error(y_train)
-    loss.backward()
-    optim.step()   # upate the weights and bias
+epochs = 5000
+BS = 128
+for _ in (t:=trange(epochs)):
+        samp = np.random.randint(0,X_train.shape[0],size=(BS))
+        x = Tensor(X_train[samp])
+        y = Tensor(Y_one_hot[samp])
+        optimizer.zero_grad()
+        loss = model(x).sparse_categorical_crossentropy(y)
+        loss.backward()
+        optimizer.step()
+        accuracy = (np.argmax(model(x).log_softmax().data,axis=1) == Y_train[samp]).mean()
+        t.set_description(f"loss={loss.data:0.2f} accuracy={accuracy:0.2f}")
+
+
+
+# evaluate the model
+x_test = Tensor(self.X_test)
+(np.argmax(model(x_test).log_softmax().data,axis=1) == Y_test).mean()
 ```
