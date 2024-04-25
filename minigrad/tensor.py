@@ -6,7 +6,6 @@ class Function:
     self.requires_grad = any(t.requires_grad for t in tensors)
 
   def forward(self, *args, **kwargs): raise NotImplementedError()
-
   def backward(self, *args, **kwargs): raise NotImplementedError()
 
   @classmethod
@@ -55,7 +54,14 @@ class Tensor:
   
   def exp(self): return ops.Exp.apply(self)
 
-  def dot(self, x): return ops.Dot.apply(self, x)
+  def dot(self, x):
+    if self.ndim == x.ndim == 1: assert self.shape[0] == x.shape[0], f"1D tensors are not aligned {self.shape[0]} (dim0) != {x.shape[0]} (dim0)"
+    else: assert self.shape[1] == x.shape[0] , f"2D tensors are not aligned {self.shape[1]} (dim1) != {x.shape[0]} (dim0)"
+    return ops.Dot.apply(self, x)
+
+  def matmul(self,x):
+    assert self.ndim == x.ndim == 2, f"2D tensors are expected" 
+    return self.dot(x)
 
   def mean(self): return ops.Mean.apply(self)
 
@@ -75,6 +81,11 @@ class Tensor:
 
   def binary_crossentropy_withlogits(self,x):
     return (self.maximum(0) - (self * x) + (1 + self.abs().neg().exp()).log()).mean()
+
+  def sparse_categorical_crossentropy(self,x):
+    # self is the raw logits 
+    # x is the one the one hot encoded vector
+    return ((-self.log_softmax() * x).sum(axis=1)).mean()
 
   @classmethod
   def zeros(cls, *shape): return cls(np.zeros(shape, dtype=np.float32))
@@ -100,7 +111,7 @@ class Tensor:
 
     if self.grad is None and autofill:
       assert self.data.shape == tuple(), "Backward can only be called on the scalar tensors"
-      self.grad = np.ones_like(self.data)
+      self.grad = np.array(1.0)
 
     grads = self._ctx.backward(self.grad)
     grads = [grads] if len(self._ctx.parents) == 1 else grads
@@ -114,7 +125,6 @@ class Tensor:
   def _const(self,val):
     if isinstance(val,(int,float)): return Tensor(np.full_like(self.data,val),requires_grad=False)
     else: return val
-
 
   def __add__(self,x): return self.add(x)
 

@@ -80,8 +80,8 @@ class Sum(Function):
     return x.sum(axis=axis,keepdims=keepdims)
 
   def backward(self, grad_out):
-    if self.axis: return np.ones_like(self.x) * _expand(grad_out,self.shape,self.axis,self.keepdims)
-    else: return np.ones_like(self.x) * grad_out 
+    if self.axis: return _expand(grad_out,self.shape,self.axis,self.keepdims)
+    else: return np.ones_like(self.x) * grad_out
 
 
 class Neg(Function):
@@ -125,7 +125,7 @@ class Mean(Function):
     return np.mean(x)
 
   def backward(self, grad_out):
-    return (1 / self.x.size) * grad_out
+    return np.full_like(self.x,(1 / self.x.size)) * grad_out
 
 
 class Relu(Function):
