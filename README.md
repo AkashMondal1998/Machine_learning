@@ -24,14 +24,13 @@ class Net(nn.Base):
 
 #load the mnsit dataset
 X_train,Y_train,X_test,Y_test = get_mnist()
-Y_one_hot = np.eye(np.max(self.Y_train) + 1)[self.Y_train] # sparse_categorical_crossentropy expects one hot encoded matrix
 
-
-# optimizer
-optimizer = Adam(self.model.parameters())
+# sparse_categorical_crossentropy expects one hot encoded matrix
+Y_one_hot = np.eye(np.max(Y_train) + 1)[Y_train]
 
 # traning the model
 epochs = 5000
+optimizer = Adam(self.model.parameters())
 BS = 128
 for _ in (t:=trange(epochs)):
         samp = np.random.randint(0,X_train.shape[0],size=(BS))
