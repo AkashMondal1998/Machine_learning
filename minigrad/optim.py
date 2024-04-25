@@ -65,4 +65,4 @@ class Adam(Optimizer):
       self.v[i] = self.b2 * self.v[i] + (1 - self.b2) * param.grad**2
       m_t = self.m[i] / (1 - self.b1**self.t)
       v_t = self.v[i] / (1 - self.b2**self.t)
-      param.data -= self.lr * (m_t / np.sqrt(v_t) + self.ep)
+      param.data -= (self.lr * m_t) / (np.sqrt(v_t) + self.ep)
