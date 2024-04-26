@@ -7,7 +7,7 @@ class DataSet:
         if dataset in ["fashion_mnist","mnist"]: self.dataset = dataset
         else: raise ValueError("Wrong dataset name")
         self.url = "http://fashion-mnist.s3-website.eu-central-1.amazonaws.com/" if dataset == "fashion_mnist" else "https://storage.googleapis.com/cvdf-datasets/mnist/"
-        self.path = os.path.join(os.getcwd(),"/datasets/fashion_mnist/") if dataset == "fashion_mnist" else os.path.join(os.getcwd(),"datasets/mnist/")
+        self.path = os.path.join(os.getcwd(),"datasets/fashion_mnist/") if dataset == "fashion_mnist" else os.path.join(os.getcwd(),"datasets/mnist/")
 
     def _fetch_dataset(self,file,offset):
         os.makedirs(self.path,exist_ok=True)
