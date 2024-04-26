@@ -1,5 +1,5 @@
 import numpy as np
-from minigrad.utils import _fetch_fashion, _load_mnsit,_fetch_mnist
+from minigrad.utils import _fetch_fashion,_fetch_mnist
 
 def get_fashion_mnist():
     X_train = _fetch_fashion("train-images-idx3-ubyte.gz",16).reshape(-1,28*28).astype(np.float32)

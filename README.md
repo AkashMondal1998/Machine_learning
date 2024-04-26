@@ -29,10 +29,12 @@ X_train,Y_train,X_test,Y_test = get_mnist()
 Y_one_hot = np.eye(np.max(Y_train) + 1)[Y_train]
 
 # traning the model
-epochs = 5000
-optimizer = Adam(self.model.parameters())
-BS = 128
-for _ in (t:=trange(epochs)):
+epochs = 5
+optimizer = Adam(model.parameters())
+BS = 64
+num_iters = X_train.shape[0] // BS
+for i in range(epochs):
+    for _ in (t:=trange(num_iters)):
         samp = np.random.randint(0,X_train.shape[0],size=(BS))
         x = Tensor(X_train[samp])
         y = Tensor(Y_one_hot[samp])
@@ -41,8 +43,7 @@ for _ in (t:=trange(epochs)):
         loss.backward()
         optimizer.step()
         accuracy = (np.argmax(model(x).log_softmax().data,axis=1) == Y_train[samp]).mean()
-        t.set_description(f"loss={loss.data:0.2f} accuracy={accuracy:0.2f}")
-
+        t.set_description(f"epoch-->{i+1}  loss={loss.data:0.2f} accuracy={accuracy:0.2f}")
 
 
 # evaluate the model
