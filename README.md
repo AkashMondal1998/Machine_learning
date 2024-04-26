@@ -6,7 +6,7 @@
 ``` python
 from minigrad import Tensor
 import minigrad.nn as nn
-from minigrad.nn import get_mnist,Adam
+from minigrad.nn import Dataset,Adam
 import numpy as np
 from tqdm import trange
 
@@ -23,7 +23,8 @@ class Net(nn.Base):
         return x
 
 #load the mnsit dataset
-X_train,Y_train,X_test,Y_test = get_mnist()
+dataset = Dataset("mnist")
+X_train,Y_train,X_test,Y_test = dataset.get_dataset()
 
 # sparse_categorical_crossentropy expects one hot encoded matrix
 Y_one_hot = np.eye(np.max(Y_train) + 1)[Y_train]
