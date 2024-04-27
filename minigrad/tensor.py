@@ -39,17 +39,17 @@ class Tensor:
 
   def __repr__(self): return f"Tensor({self.data},requires_grad={self.requires_grad})"
 
-  def add(self,x,reverse=False): return ops.Add.apply(*self._const(x,reverse=reverse))
+  def add(self,x,reverse=False): return ops.Add.apply(*self._const(x,reverse))
 
-  def sub(self,x,reverse=False): return ops.Sub.apply(*self._const(x,reverse=reverse))
+  def sub(self,x,reverse=False): return ops.Sub.apply(*self._const(x,reverse))
 
-  def div(self,x,reverse=False): return ops.Div.apply(*self._const(x,reverse=reverse))
+  def div(self,x,reverse=False): return ops.Div.apply(*self._const(x,reverse))
 
-  def mul(self,x,reverse=False): return ops.Mul.apply(*self._const(x,reverse=reverse))
+  def mul(self,x,reverse=False): return ops.Mul.apply(*self._const(x,reverse))
   
-  def pow(self,x,reverse=False): return ops.Pow.apply(*self._const(x,reverse=reverse))
+  def pow(self,x,reverse=False): return ops.Pow.apply(*self._const(x,reverse))
 
-  def maximum(self,x,reverse=False): return ops.Maximum.apply(*self._const(x,reverse=reverse))
+  def maximum(self,x,reverse=False): return ops.Maximum.apply(*self._const(x,reverse))
 
   def reshape(self, shape=None): return ops.Reshape.apply(self, shape=shape)
 
@@ -151,5 +151,3 @@ class Tensor:
   def __rmul__(self,x): return self.mul(x,True)
   def __rpow__(self,x): return self.pow(x,True)
   def __rtruediv__(self,x): return self.div(x,True)
-
-  
