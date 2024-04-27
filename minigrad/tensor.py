@@ -36,19 +36,19 @@ class Tensor:
 
   def __repr__(self): return f"Tensor({self.data},requires_grad={self.requires_grad})"
 
-  def add(self, x): return ops.Add.apply(self, self._const(x))
+  def add(self,x,reverse=False): return ops.Add.apply(*self._const(x,reverse=reverse))
 
-  def neg(self): return ops.Neg.apply(self)
+  def sub(self,x,reverse=False): return ops.Sub.apply(*self._const(x,reverse=reverse))
 
-  def sub(self,x,reverse=False): return ops.Sub.apply(self, self._const(x),reverse=reverse)
+  def div(self,x,reverse=False): return ops.Div.apply(*self._const(x,reverse=reverse))
 
-  def div(self,x,reverse=False): return ops.Div.apply(self, self._const(x),reverse=reverse)
-
-  def mul(self, x): return ops.Mul.apply(self, self._const(x))
+  def mul(self,x,reverse=False): return ops.Mul.apply(*self._const(x,reverse=reverse))
 
   def reshape(self, shape=None): return ops.Reshape.apply(self, shape=shape)
 
   def sum(self, axis=None,keepdims=False): return ops.Sum.apply(self, axis=axis,keepdims=keepdims)
+
+  def neg(self): return ops.Neg.apply(self)
 
   def log(self): return ops.Log.apply(self)
   
@@ -86,6 +86,7 @@ class Tensor:
     # self is the raw logits 
     # x is the one the one hot encoded vector
     return ((-self.log_softmax() * x).sum(axis=1)).mean()
+    # return self.log_softmax().neg().mul(x).sum(axis=1).mean()
 
   @classmethod
   def zeros(cls, *shape): return cls(np.zeros(shape, dtype=np.float32))
@@ -122,28 +123,29 @@ class Tensor:
         t.grad = g if t.grad is None else (t.grad + g)
         t.backward(False)
 
-  def _const(self,val):
-    if isinstance(val,(int,float)): return Tensor(np.full_like(self.data,val),requires_grad=False)
-    else: return val
+  def _const(self,val,reverse):
+    val = Tensor(np.full_like(self.data,val),requires_grad=False) if isinstance(val,(int,float)) else val 
+    if reverse: return val,self
+    else: return self,val
+
+  def __neg__(self): return self.neg()
 
   def __add__(self,x): return self.add(x)
 
-  def __radd__(self,x): return self.add(x)
-  
   def __sub__(self,x): return self.sub(x)
 
-  def __rsub__(self,x): return self.sub(x,True)
-  
   def __mul__(self,x): return self.mul(x)
 
-  def __rmul__(self,x): return self.mul(x)
+  def __matmul__(self,x): return self.dot(x)
 
   def __truediv__(self,x): return self.div(x)
 
+  def __radd__(self,x): return self.add(x,True)
+
+  def __rsub__(self,x): return self.sub(x,True)
+
+  def __rmul__(self,x): return self.mul(x,True)
+  
   def __rtruediv__(self,x): return self.div(x,True)
-  
-  def __matmul__(self,x): return self.dot(x)
-  
-  def __neg__(self): return self.neg()
 
   

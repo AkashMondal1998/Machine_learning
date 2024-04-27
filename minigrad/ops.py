@@ -11,16 +11,11 @@ class Add(Function):
     return grad_out, grad_out
 
 class Sub(Function):
-  def forward(self,x,y,reverse):
-    self.reverse = reverse
-    if not reverse: return x - y
-    else: return y - x
+  def forward(self,x,y):
+    return x - y
   
-  def backward(self,grad_out):
-    if not self.reverse: 
-      return grad_out, -grad_out
-    else: 
-      return -grad_out, grad_out
+  def backward(self,grad_out): 
+    return grad_out, -grad_out
 
 class Mul(Function):
   def forward(self, x, y):
@@ -33,18 +28,13 @@ class Mul(Function):
   
 
 class Div(Function):
-  def forward(self, x, y,reverse):
-    self.reverse = reverse
+  def forward(self, x, y):
     self.x = x
     self.y = y
-    if not reverse: return x / y
-    else: return y / x
+    return x / y
 
-  def backward(self, grad_out):
-    if not self.reverse: 
-      return self.y**-1 * grad_out, (self.x * -self.y**-2) * grad_out
-    else: 
-      return  (self.y * -self.x**-2) * grad_out, self.x**-1 * grad_out
+  def backward(self, grad_out): 
+    return self.y**-1 * grad_out, (self.x * -self.y**-2) * grad_out
 
 
 class Dot(Function):
