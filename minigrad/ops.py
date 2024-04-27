@@ -36,6 +36,14 @@ class Div(Function):
   def backward(self, grad_out): 
     return self.y**-1 * grad_out, (self.x * -self.y**-2) * grad_out
 
+class Pow(Function):
+  def forward(self,x,y):
+    self.x = x
+    self.y = y
+    return x ** y
+  
+  def backward(self,grad_out):
+    return self.y * (self.x**(self.y - 1)) * grad_out, (self.x**self.y)* np.log(self.x) * grad_out
 
 class Dot(Function):
   def forward(self, x, y):
@@ -129,11 +137,7 @@ class Relu(Function):
 
 class Sigmoid(Function):
   def forward(self, x):
-    self.ret = np.piecewise(
-        x,
-        [x > 0],
-        [lambda i: 1 / (1 + np.exp(-i)), lambda i: np.exp(i) / (1 + np.exp(i))],
-    )
+    self.ret = np.piecewise(x,[x > 0],[lambda i: 1 / (1 + np.exp(-i)), lambda i: np.exp(i) / (1 + np.exp(i))],)
     return self.ret
 
   def backward(self, grad_out):

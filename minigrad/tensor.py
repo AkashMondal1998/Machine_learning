@@ -34,6 +34,9 @@ class Tensor:
   @property 
   def ndim(self): return self.data.ndim
 
+  @property
+  def size(self): return self.data.size
+
   def __repr__(self): return f"Tensor({self.data},requires_grad={self.requires_grad})"
 
   def add(self,x,reverse=False): return ops.Add.apply(*self._const(x,reverse=reverse))
@@ -43,6 +46,10 @@ class Tensor:
   def div(self,x,reverse=False): return ops.Div.apply(*self._const(x,reverse=reverse))
 
   def mul(self,x,reverse=False): return ops.Mul.apply(*self._const(x,reverse=reverse))
+  
+  def pow(self,x,reverse=False): return ops.Pow.apply(*self._const(x,reverse=reverse))
+
+  def maximum(self,x,reverse=False): return ops.Maximum.apply(*self._const(x,reverse=reverse))
 
   def reshape(self, shape=None): return ops.Reshape.apply(self, shape=shape)
 
@@ -54,6 +61,8 @@ class Tensor:
   
   def exp(self): return ops.Exp.apply(self)
 
+  def sqrt(self): return self.pow(0.5)
+
   def dot(self, x):
     if self.ndim == x.ndim == 1: assert self.shape[0] == x.shape[0], f"1D tensors are not aligned {self.shape[0]} (dim0) != {x.shape[0]} (dim0)"
     else: assert self.shape[1] == x.shape[0] , f"2D tensors are not aligned {self.shape[1]} (dim1) != {x.shape[0]} (dim0)"
@@ -63,7 +72,7 @@ class Tensor:
     assert self.ndim == x.ndim == 2, f"2D tensors are expected" 
     return self.dot(x)
 
-  def mean(self): return ops.Mean.apply(self)
+  def mean(self): return self.sum().div(self.size)
 
   def relu(self): return ops.Relu.apply(self)
 
@@ -75,9 +84,10 @@ class Tensor:
 
   def abs(self): return self.relu() + self.neg().relu()
 
-  def maximum(self,x): return ops.Maximum.apply(self,self._const_val(x))
-
   def mean_squared_error(self, x): return (self.sub(x)).square().mean()
+
+  def binary_crossentropy(self,x): 
+    return ((-x * self.log()) - ((1 - x) * (1 - self).log())).mean()
 
   def binary_crossentropy_withlogits(self,x):
     return (self.maximum(0) - (self * x) + (1 + self.abs().neg().exp()).log()).mean()
@@ -85,8 +95,7 @@ class Tensor:
   def sparse_categorical_crossentropy(self,x):
     # self is the raw logits 
     # x is the one the one hot encoded vector
-    return ((-self.log_softmax() * x).sum(axis=1)).mean()
-    # return self.log_softmax().neg().mul(x).sum(axis=1).mean()
+    return self.log_softmax().neg().mul(x).sum(axis=1).mean()
 
   @classmethod
   def zeros(cls, *shape): return cls(np.zeros(shape, dtype=np.float32))
@@ -105,7 +114,7 @@ class Tensor:
     return cls(np.random.normal(0.0, scale, (in_features, out_features)), requires_grad=requires_grad)
 
   @classmethod
-  def from_numpy(cls, array): return cls(array.astype(float))
+  def from_numpy(cls, array): return cls(array.astype(np.float32))
 
   def backward(self, autofill=True):
     if not self.requires_grad or not self._ctx: return
@@ -128,24 +137,19 @@ class Tensor:
     if reverse: return val,self
     else: return self,val
 
+
   def __neg__(self): return self.neg()
-
   def __add__(self,x): return self.add(x)
-
   def __sub__(self,x): return self.sub(x)
-
   def __mul__(self,x): return self.mul(x)
-
+  def __pow__(self,x): return self.pow(x)
   def __matmul__(self,x): return self.dot(x)
-
   def __truediv__(self,x): return self.div(x)
 
   def __radd__(self,x): return self.add(x,True)
-
   def __rsub__(self,x): return self.sub(x,True)
-
   def __rmul__(self,x): return self.mul(x,True)
-  
+  def __rpow__(self,x): return self.pow(x,True)
   def __rtruediv__(self,x): return self.div(x,True)
 
   
