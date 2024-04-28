@@ -2,8 +2,8 @@ import numpy as np
 
 class Function:
   def __init__(self, *tensors):
-    self.parents = tensors
     self.requires_grad = any(t.requires_grad for t in tensors)
+    if self.requires_grad:  self.parents = tensors
 
   def forward(self, *args, **kwargs): raise NotImplementedError()
   def backward(self, *args, **kwargs): raise NotImplementedError()
@@ -129,9 +129,10 @@ class Tensor:
     grads = [grads] if len(self._ctx.parents) == 1 else grads
 
     for t, g in zip(self._ctx.parents, grads):
-      assert t.shape == g.shape, f"{t.shape} != {g.shape}"
-      t.grad = g if t.grad is None else (t.grad + g)
-      t.backward(False)
+      if t.requires_grad:
+        assert t.shape == g.shape, f"{t.shape} != {g.shape}"
+        t.grad = g if t.grad is None else (t.grad + g)
+        t.backward(False)
 
   def _const(self,val,reverse):
     val = Tensor(np.full_like(self.data,val),requires_grad=False) if isinstance(val,(int,float)) else val 

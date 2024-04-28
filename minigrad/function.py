@@ -117,15 +117,6 @@ class Log(Function):
     return (1 / self.x) * grad_out
 
 
-class Mean(Function):
-  def forward(self, x):
-    self.x = x
-    return np.mean(x)
-
-  def backward(self, grad_out):
-    return np.full_like(self.x,(1 / self.x.size)) * grad_out
-
-
 class Relu(Function):
   def forward(self, x):
     self.x = x
