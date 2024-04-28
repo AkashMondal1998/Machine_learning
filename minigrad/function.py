@@ -52,8 +52,8 @@ class Dot(Function):
     return x.dot(y)
 
   def backward(self, grad_out):
-    x_grad = grad_out.dot(self.y.T)
-    y_grad = self.x.T.dot(grad_out)
+    x_grad = np.dot(grad_out,self.y.T)
+    y_grad = np.dot(self.x.T,grad_out)
     return x_grad, y_grad
 
 

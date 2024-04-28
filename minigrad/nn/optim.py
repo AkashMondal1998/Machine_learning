@@ -2,8 +2,9 @@ import numpy as np
 
 
 class Optimizer:
-  def __init__(self, params):
+  def __init__(self, params, lr):
     self.params = params
+    self.lr = lr
 
   def zero_grad(self):
     for param in self.params:
@@ -13,8 +14,7 @@ class Optimizer:
 
 class SGD(Optimizer):
   def __init__(self, parameters, lr=1e-3, momentum=0.0, nesterov=False):
-    super().__init__(parameters)
-    self.lr = lr
+    super().__init__(parameters,lr)
     self.m = momentum
     self.v = [np.zeros_like(t.data) for t in self.params]
     self.nesterov = nesterov
@@ -35,11 +35,10 @@ class SGD(Optimizer):
 
 class RMSProp(Optimizer):
   def __init__(self, parameters, epsilon=1e-8, beta=0.9, lr=0.001):
-    super().__init__(parameters)
+    super().__init__(parameters,lr)
     self.ep = epsilon
     self.b = beta
     self.m = [np.zeros_like(t.data) for t in self.params]
-    self.lr = lr
 
   def step(self):
     for i, param in enumerate(self.params):
@@ -49,11 +48,10 @@ class RMSProp(Optimizer):
 
 class Adam(Optimizer):
   def __init__(self, parameters, beta1=0.9, beta2=0.999, epsilon=1e-8, lr=0.001):
-    super().__init__(parameters)
+    super().__init__(parameters,lr)
     self.b1 = beta1
     self.b2 = beta2
     self.ep = epsilon
-    self.lr = lr
     self.m = [np.zeros_like(t.data) for t in self.params]
     self.v = [np.zeros_like(t.data) for t in self.params]
     self.t = 0

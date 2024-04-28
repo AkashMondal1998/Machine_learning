@@ -11,7 +11,7 @@ class Function:
   @classmethod
   def apply(op, *x, **kwargs):
     ctx = op(*x)
-    ret = Tensor(op.forward(ctx, *[t.data for t in x], **kwargs), requires_grad=ctx.requires_grad)
+    ret = Tensor(ctx.forward(*[t.data for t in x], **kwargs), requires_grad=ctx.requires_grad)
     if ctx.requires_grad: ret._ctx = ctx
     return ret
 
@@ -19,6 +19,8 @@ class Function:
 import minigrad.function as F
 
 class Tensor:
+  __slots__  = "data", "grad", "_ctx", "requires_grad"
+
   def __init__(self, data, requires_grad=False):
     self.data = np.array(data, dtype=np.float32)
     self.grad = None

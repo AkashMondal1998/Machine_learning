@@ -2,11 +2,17 @@
 ### A Mnist classifier
 #### Inspired by [Tinygrad](https://github.com/tinygrad/tinygrad) and [Micrograd](https://github.com/karpathy/micrograd)
 
-Mnist example
+#### Mnist example
 ```bash
-python3 -m example.mnist
+PYTHONPATH="." python3 examples/mnist.py
 ```
-Fashion Mnist example
+#### Fashion Mnist example
 ```bash
-python3 -m example.fashion_mnist
+PYTHONPATH="." python3 examples/fashion_mnist.py
+```
+
+#### Running Test
+Install pytest and torch to validate the gradients
+```bash
+python3 -m pytest
 ```
