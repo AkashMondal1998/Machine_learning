@@ -12,11 +12,11 @@ class Function:
   def apply(op, *x, **kwargs):
     ctx = op(*x)
     ret = Tensor(op.forward(ctx, *[t.data for t in x], **kwargs), requires_grad=ctx.requires_grad)
-    ret._ctx = ctx
+    if ctx.requires_grad: ret._ctx = ctx
     return ret
 
 
-from minigrad import ops
+import minigrad.function as F
 
 class Tensor:
   def __init__(self, data, requires_grad=False):
@@ -39,34 +39,34 @@ class Tensor:
 
   def __repr__(self): return f"Tensor({self.data},requires_grad={self.requires_grad})"
 
-  def add(self,x,reverse=False): return ops.Add.apply(*self._const(x,reverse))
+  def add(self,x,reverse=False): return F.Add.apply(*self._const(x,reverse))
 
-  def sub(self,x,reverse=False): return ops.Sub.apply(*self._const(x,reverse))
+  def sub(self,x,reverse=False): return F.Sub.apply(*self._const(x,reverse))
 
-  def div(self,x,reverse=False): return ops.Div.apply(*self._const(x,reverse))
+  def div(self,x,reverse=False): return F.Div.apply(*self._const(x,reverse))
 
-  def mul(self,x,reverse=False): return ops.Mul.apply(*self._const(x,reverse))
+  def mul(self,x,reverse=False): return F.Mul.apply(*self._const(x,reverse))
   
-  def pow(self,x,reverse=False): return ops.Pow.apply(*self._const(x,reverse))
+  def pow(self,x,reverse=False): return F.Pow.apply(*self._const(x,reverse))
 
-  def maximum(self,x,reverse=False): return ops.Maximum.apply(*self._const(x,reverse))
+  def maximum(self,x,reverse=False): return F.Maximum.apply(*self._const(x,reverse))
 
-  def reshape(self, shape=None): return ops.Reshape.apply(self, shape=shape)
+  def reshape(self, shape=None): return F.Reshape.apply(self, shape=shape)
 
-  def sum(self, axis=None,keepdims=False): return ops.Sum.apply(self, axis=axis,keepdims=keepdims)
+  def sum(self, axis=None,keepdims=False): return F.Sum.apply(self, axis=axis,keepdims=keepdims)
 
-  def neg(self): return ops.Neg.apply(self)
+  def neg(self): return F.Neg.apply(self)
 
-  def log(self): return ops.Log.apply(self)
+  def log(self): return F.Log.apply(self)
   
-  def exp(self): return ops.Exp.apply(self)
+  def exp(self): return F.Exp.apply(self)
 
   def sqrt(self): return self.pow(0.5)
 
   def dot(self, x):
     if self.ndim == x.ndim == 1: assert self.shape[0] == x.shape[0], f"1D tensors are not aligned {self.shape[0]} (dim0) != {x.shape[0]} (dim0)"
     else: assert self.shape[1] == x.shape[0] , f"2D tensors are not aligned {self.shape[1]} (dim1) != {x.shape[0]} (dim0)"
-    return ops.Dot.apply(self, x)
+    return F.Dot.apply(self, x)
 
   def matmul(self,x):
     assert self.ndim == x.ndim == 2, f"2D tensors are expected" 
@@ -74,11 +74,11 @@ class Tensor:
 
   def mean(self): return self.sum().div(self.size)
 
-  def relu(self): return ops.Relu.apply(self)
+  def relu(self): return F.Relu.apply(self)
 
-  def sigmoid(self): return ops.Sigmoid.apply(self)
+  def sigmoid(self): return F.Sigmoid.apply(self)
 
-  def log_softmax(self): return ops.LogSoftMax.apply(self)
+  def log_softmax(self): return F.LogSoftMax.apply(self)
 
   def square(self): return self * self
 
@@ -117,7 +117,7 @@ class Tensor:
   def from_numpy(cls, array): return cls(array.astype(np.float32))
 
   def backward(self, autofill=True):
-    if not self.requires_grad or not self._ctx: return
+    if not self._ctx: return
 
     if self.grad is None and autofill:
       assert self.data.shape == tuple(), "Backward can only be called on the scalar tensors"
@@ -128,9 +128,8 @@ class Tensor:
 
     for t, g in zip(self._ctx.parents, grads):
       assert t.shape == g.shape, f"{t.shape} != {g.shape}"
-      if t.requires_grad:
-        t.grad = g if t.grad is None else (t.grad + g)
-        t.backward(False)
+      t.grad = g if t.grad is None else (t.grad + g)
+      t.backward(False)
 
   def _const(self,val,reverse):
     val = Tensor(np.full_like(self.data,val),requires_grad=False) if isinstance(val,(int,float)) else val 
