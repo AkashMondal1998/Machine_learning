@@ -162,5 +162,12 @@ cython_debug/
 
 
 .DS_Store
+
+# Ignore dataset directory
 /datasets/
+
+# Ignore Jupyter Notebooks
 *.ipynb
+
+# Ignore vscode configs 
+.vscode/
