@@ -1,21 +1,25 @@
 from .tensor import Function
-from .helpers import _expand
+from .helpers import _expand,_reduce
 import numpy as np
 
 
 class Add(Function):
   def forward(self, x, y):
+    self.x_shape = x.shape
+    self.y_shape = y.shape
     return x + y
 
   def backward(self, grad_out):
-    return grad_out, grad_out
+    return _reduce(grad_out,self.x_shape), _reduce(grad_out,self.y_shape)
 
 class Sub(Function):
   def forward(self,x,y):
+    self.x_shape = x.shape
+    self.y_shape = y.shape
     return x - y
   
   def backward(self,grad_out): 
-    return grad_out, -grad_out
+    return _reduce(grad_out,self.x_shape), _reduce(-grad_out,self.y_shape)
 
 class Mul(Function):
   def forward(self, x, y):
@@ -24,7 +28,7 @@ class Mul(Function):
     return x * y
 
   def backward(self, grad_out): 
-    return self.y * grad_out, self.x * grad_out
+    return _reduce(self.y * grad_out,self.x.shape), _reduce(self.x * grad_out,self.y.shape)
   
 
 class Div(Function):
@@ -33,8 +37,10 @@ class Div(Function):
     self.y = y
     return x / y
 
-  def backward(self, grad_out): 
-    return self.y**-1 * grad_out, (self.x * -self.y**-2) * grad_out
+  def backward(self, grad_out):
+    grad_x = self.y**-1
+    grad_y = self.x * -self.y**-2
+    return _reduce(grad_x * grad_out,self.x.shape), _reduce(grad_y * grad_out,self.y.shape)
 
 class Pow(Function):
   def forward(self,x,y):
@@ -43,7 +49,7 @@ class Pow(Function):
     return x ** y
   
   def backward(self,grad_out):
-    return self.y * (self.x**(self.y - 1)) * grad_out, (self.x**self.y)* np.log(self.x) * grad_out
+    return _reduce(self.y * (self.x**(self.y - 1)) * grad_out,self.x.shape), _reduce((self.x**self.y)* np.log(self.x) * grad_out,self.y.shape)
 
 class Dot(Function):
   def forward(self, x, y):
@@ -66,7 +72,7 @@ class Maximum(Function):
   def backward(self,grad_out):
     grad_x = np.where(self.x > self.y,1,np.where(self.x < self.y,0,0.5))
     grad_y = np.where(self.y > self.x,1,np.where(self.y < self.x,0,0.5))
-    return grad_x * grad_out ,grad_y * grad_out
+    return _reduce(grad_x * grad_out,self.x.shape) ,_reduce(grad_y * grad_out,self.y.shape)
 
 
 class Sum(Function):
