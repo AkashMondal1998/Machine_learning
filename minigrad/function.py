@@ -49,7 +49,8 @@ class Pow(Function):
     return x ** y
   
   def backward(self,grad_out):
-    return _reduce(self.y * (self.x**(self.y - 1)) * grad_out,self.x.shape), _reduce((self.x**self.y)* np.log(self.x) * grad_out,self.y.shape)
+    return _reduce(self.y * (self.x**(self.y - 1)) * grad_out,self.x.shape), \
+           _reduce((self.x**self.y)* np.log(self.x) * grad_out,self.y.shape)
 
 class Dot(Function):
   def forward(self, x, y):
@@ -79,13 +80,11 @@ class Sum(Function):
   def forward(self, x, axis,keepdims):
     self.axis = axis
     self.x = x
-    self.shape = x.shape
-    self.keepdims = keepdims
     return x.sum(axis=axis,keepdims=keepdims)
 
   def backward(self, grad_out):
-    if self.axis: return _expand(grad_out,self.shape,self.axis,self.keepdims)
-    else: return np.ones_like(self.x) * grad_out
+    ret = _expand(grad_out,self.axis,self.x.shape) if self.axis else np.ones_like(self.x) * grad_out
+    return ret
 
 
 class Neg(Function):
