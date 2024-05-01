@@ -76,6 +76,19 @@ class Maximum(Function):
     return _reduce(grad_x * grad_out,self.x.shape) ,_reduce(grad_y * grad_out,self.y.shape)
 
 
+class Max(Function):
+  def forward(self,x,axis,keepdims):
+    self.axis = axis
+    self.x = x
+    self.ret = np.max(x,axis=axis,keepdims=keepdims)
+    return self.ret
+
+  def backward(self,grad_out):
+    max_1s = (self.x == _expand(self.ret,self.axis,self.x.shape)).astype(np.float32)
+    num_1s = max_1s.sum(axis=self.axis,keepdims=True)
+    return (max_1s / num_1s) * _expand(grad_out,self.axis,self.x.shape)
+    
+
 class Sum(Function):
   def forward(self, x, axis,keepdims):
     self.axis = axis

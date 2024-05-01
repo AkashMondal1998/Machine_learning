@@ -57,6 +57,8 @@ class Tensor:
 
   def sum(self, axis=None,keepdims=False): return F.Sum.apply(self, axis=axis,keepdims=keepdims)
 
+  def max(self, axis=None,keepdims=False): return F.Max.apply(self, axis=axis,keepdims=keepdims)
+
   def neg(self): return F.Neg.apply(self)
 
   def log(self): return F.Log.apply(self)
