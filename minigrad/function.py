@@ -1,5 +1,5 @@
 from .tensor import Function
-from .helpers import _expand,_reduce
+from .helpers import expand,reduce
 import numpy as np
 
 
@@ -10,7 +10,7 @@ class Add(Function):
     return x + y
 
   def backward(self, grad_out):
-    return _reduce(grad_out,self.x_shape), _reduce(grad_out,self.y_shape)
+    return reduce(grad_out,self.x_shape), reduce(grad_out,self.y_shape)
 
 class Sub(Function):
   def forward(self,x,y):
@@ -19,43 +19,39 @@ class Sub(Function):
     return x - y
   
   def backward(self,grad_out): 
-    return _reduce(grad_out,self.x_shape), _reduce(-grad_out,self.y_shape)
+    return reduce(grad_out,self.x_shape), reduce(-grad_out,self.y_shape)
 
 class Mul(Function):
   def forward(self, x, y):
-    self.x = x
-    self.y = y
+    self.x ,self.y = x, y
     return x * y
 
   def backward(self, grad_out): 
-    return _reduce(self.y * grad_out,self.x.shape), _reduce(self.x * grad_out,self.y.shape)
+    return reduce(self.y * grad_out,self.x.shape), reduce(self.x * grad_out,self.y.shape)
   
 
 class Div(Function):
   def forward(self, x, y):
-    self.x = x
-    self.y = y
+    self.x, self.y = x, y
     return x / y
 
   def backward(self, grad_out):
     grad_x = self.y**-1
     grad_y = self.x * -self.y**-2
-    return _reduce(grad_x * grad_out,self.x.shape), _reduce(grad_y * grad_out,self.y.shape)
+    return reduce(grad_x * grad_out,self.x.shape), reduce(grad_y * grad_out,self.y.shape)
 
 class Pow(Function):
   def forward(self,x,y):
-    self.x = x
-    self.y = y
+    self.x, self.y = x, y
     return x ** y
   
   def backward(self,grad_out):
-    return _reduce(self.y * (self.x**(self.y - 1)) * grad_out,self.x.shape), \
-           _reduce((self.x**self.y)* np.log(self.x) * grad_out,self.y.shape)
+    return reduce(self.y * (self.x**(self.y - 1)) * grad_out,self.x.shape), \
+           reduce((self.x**self.y)* np.log(self.x) * grad_out,self.y.shape)
 
 class Dot(Function):
   def forward(self, x, y):
-    self.x = x
-    self.y = y
+    self.x, self.y = x, y
     return x.dot(y)
 
   def backward(self, grad_out):
@@ -66,14 +62,13 @@ class Dot(Function):
 
 class Maximum(Function):
   def forward(self,x,y):
-    self.x = x
-    self.y = y
+    self.x, self.y = x, y
     return np.maximum(x,y)
   
   def backward(self,grad_out):
     grad_x = np.where(self.x > self.y,1,np.where(self.x < self.y,0,0.5))
     grad_y = np.where(self.y > self.x,1,np.where(self.y < self.x,0,0.5))
-    return _reduce(grad_x * grad_out,self.x.shape) ,_reduce(grad_y * grad_out,self.y.shape)
+    return reduce(grad_x * grad_out,self.x.shape) ,reduce(grad_y * grad_out,self.y.shape)
 
 
 class Max(Function):
@@ -84,9 +79,9 @@ class Max(Function):
     return self.ret
 
   def backward(self,grad_out):
-    max_1s = (self.x == _expand(self.ret,self.axis,self.x.shape)).astype(np.float32)
+    max_1s = (self.x == expand(self.ret,self.axis,self.x.shape)).astype(np.float32)
     num_1s = max_1s.sum(axis=self.axis,keepdims=True)
-    return (max_1s / num_1s) * _expand(grad_out,self.axis,self.x.shape)
+    return (max_1s / num_1s) * expand(grad_out,self.axis,self.x.shape)
     
 
 class Sum(Function):
@@ -96,7 +91,7 @@ class Sum(Function):
     return x.sum(axis=axis,keepdims=keepdims)
 
   def backward(self, grad_out):
-    ret = _expand(grad_out,self.axis,self.x.shape) if self.axis else np.ones_like(self.x) * grad_out
+    ret = expand(grad_out,self.axis,self.x.shape) if self.axis else np.ones_like(self.x) * grad_out
     return ret
 
 
@@ -151,18 +146,3 @@ class Sigmoid(Function):
 
   def backward(self, grad_out):
     return self.ret * (1 - self.ret) * grad_out
-
-
-class LogSoftMax(Function):
-  def forward(self, x):
-    def logsumexp(x):
-      c = x.max(axis=1, keepdims=True)
-      return c + np.log(np.exp(x - c).sum(axis=1, keepdims=True))
-
-    ret = x - logsumexp(x)
-    self.ret = ret
-    return ret
-
-  def backward(self, grad_out): 
-    return grad_out - np.exp(self.ret) * grad_out.sum(axis=1, keepdims=True)
-  

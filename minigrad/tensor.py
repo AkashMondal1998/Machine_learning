@@ -82,7 +82,19 @@ class Tensor:
 
   def sigmoid(self): return F.Sigmoid.apply(self)
 
-  def log_softmax(self): return F.LogSoftMax.apply(self)
+  def _softmax(self,axis):
+    m = self - self.max(axis=axis,keepdims=True)
+    e = m.exp()
+    e_sum = e.sum(axis=axis,keepdims=True)
+    return m, e, e_sum
+
+  def softmax(self,axis=-1):
+    _, e, e_sum = self._softmax(axis=axis)
+    return e.div(e_sum)
+
+  def log_softmax(self,axis=-1):
+    m, _, e_sum = self._softmax(axis=axis)
+    return m - e_sum.log()
 
   def square(self): return self * self
 
@@ -117,24 +129,31 @@ class Tensor:
     scale = np.sqrt(2 / (in_features + out_features))
     return cls(np.random.normal(0.0, scale, (in_features, out_features)), requires_grad=requires_grad)
 
-  @classmethod
-  def from_numpy(cls, array): return cls(array.astype(np.float32))
+  def build_topo(self):
+    nodes = list()
+    visited = set()
+    def _build_topo(v):
+      if v not in visited:
+        visited.add(v)
+        if v._ctx:
+            for p in v._ctx.parents: _build_topo(p)
+            nodes.append(v)
+    _build_topo(self)
+    return nodes
 
-  def backward(self, autofill=True):
-    if not self._ctx: return
+  def backward(self):
+    assert self.data.shape == tuple(), "Backward can only be called on the scalar tensors"
+    self.grad = np.array(1.0)
 
-    if self.grad is None and autofill:
-      assert self.data.shape == tuple(), "Backward can only be called on the scalar tensors"
-      self.grad = np.array(1.0)
+    for t0 in reversed(self.build_topo()):
+      grads = t0._ctx.backward(t0.grad)
+      grads = [grads] if len(t0._ctx.parents) == 1 else grads
 
-    grads = self._ctx.backward(self.grad)
-    grads = [grads] if len(self._ctx.parents) == 1 else grads
-
-    for t, g in zip(self._ctx.parents, grads):
-      if t.requires_grad:
-        assert t.shape == g.shape, f"{t.shape} != {g.shape}"
-        t.grad = g if t.grad is None else (t.grad + g)
-        t.backward(False)
+      for t, g in zip(t0._ctx.parents, grads):
+        if t.requires_grad:
+          assert t.shape == g.shape, f"{t.shape} != {g.shape}"
+          t.grad = g if t.grad is None else (t.grad + g)
+    return self
 
   def _const(self,val,reverse):
     val = Tensor(np.full_like(self.data,val),requires_grad=False) if isinstance(val,(int,float)) else val 
