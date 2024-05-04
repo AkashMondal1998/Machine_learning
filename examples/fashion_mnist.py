@@ -1,7 +1,6 @@
 from minigrad import Tensor
 import minigrad.nn as nn
 from minigrad.nn import DataSet,Adam
-import numpy as np
 from tqdm import trange
 import math
 
@@ -17,9 +16,8 @@ class Net(nn.Base):
 
 
 if __name__ == "__main__":
-    dataset = DataSet("fashion_mnist")
+    dataset = DataSet("fashion_mnist",to_tensor=True)
     X_train,Y_train,X_test,Y_test = dataset.get_dataset()
-    x_train,y_train,x_test = Tensor(X_train),Tensor(Y_train),Tensor(X_test)
     model = Net()
     optimizer = Adam(model.parameters())
     BS = 256
@@ -27,12 +25,12 @@ if __name__ == "__main__":
 
     for i in range(20):
         for _ in (t:=trange(num_iters)):
-            samp = Tensor.randint(x_train.shape[0],size=(BS))
+            samp = Tensor.randint(X_train.shape[0],size=(BS))
             optimizer.zero_grad()
-            loss = model(x_train[samp]).sparse_categorical_crossentropy(y_train[samp])
+            loss = model(X_train[samp]).sparse_categorical_crossentropy(Y_train[samp])
             loss.backward()
             optimizer.step()
-            accuracy = (np.argmax(model(x_train[samp]).log_softmax().data,axis=1) == y_train[samp].data).mean()
-            t.set_description(f"epoch-->{i+1}  loss={loss.data:0.2f} accuracy={accuracy:0.2f}")
+            accuracy = (model(X_train[samp]).log_softmax().argmax(axis=1) == Y_train[samp]).mean()
+            t.set_description(f"epoch-->{i+1}  loss={loss.item():0.2f} accuracy={accuracy.item():0.2f}")
     
-    print(f"accuracy on test set = {(np.argmax(model(x_test).log_softmax().data,axis=1) == Y_test).mean()*100:0.2f}")
+    print(f"accuracy on test set = {(model(X_test).log_softmax().argmax(axis=1) == Y_test).mean().item()*100:0.2f}")

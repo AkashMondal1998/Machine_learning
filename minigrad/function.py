@@ -5,8 +5,7 @@ import numpy as np
 
 class Add(Function):
   def forward(self, x, y):
-    self.x_shape = x.shape
-    self.y_shape = y.shape
+    self.x_shape, self.y_shape = x.shape, y.shape
     return x + y
 
   def backward(self, grad_out):
@@ -14,8 +13,7 @@ class Add(Function):
 
 class Sub(Function):
   def forward(self,x,y):
-    self.x_shape = x.shape
-    self.y_shape = y.shape
+    self.x_shape, self.y_shape = x.shape, y.shape
     return x - y
   
   def backward(self,grad_out): 

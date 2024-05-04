@@ -43,6 +43,8 @@ class Tensor:
 
   def __len__(self): return len(self.data)
 
+  def __hash__(self): return id(self)
+
   def add(self,x,reverse=False): return F.Add.apply(*self._const(x,reverse))
 
   def sub(self,x,reverse=False): return F.Sub.apply(*self._const(x,reverse))
@@ -60,6 +62,8 @@ class Tensor:
   def sum(self, axis=None,keepdims=False): return F.Sum.apply(self, axis=axis,keepdims=keepdims)
 
   def max(self, axis=None,keepdims=False): return F.Max.apply(self, axis=axis,keepdims=keepdims)
+
+  def argmax(self,axis=None,keepdims=False): return Tensor(np.argmax(self.data,axis=axis,keepdims=keepdims))
 
   def neg(self): return F.Neg.apply(self)
 
@@ -116,6 +120,17 @@ class Tensor:
     loss = self[Tensor.arange(len(y)), y].neg()
     return loss.mean()
 
+  def item(self):
+    assert self.shape == tuple()
+    return self.data.item()
+
+  def _eq(x,y):
+    return x.data == y.data
+    
+  def eq(self,x):
+    t = Tensor._eq(*self._const(x,reverse=False))
+    return Tensor(t)
+
   @classmethod
   def zeros(cls, *shape): return cls(np.zeros(shape, dtype=np.float32))
 
@@ -167,7 +182,7 @@ class Tensor:
           t.grad = g if t.grad is None else (t.grad + g)
     return self
 
-  # handle the case where the dtype of the val does not match the dtype of the Tensor
+
   def _const(self,val,reverse):
     val = Tensor(np.full_like(self.data,val),requires_grad=False) if isinstance(val,(int,float)) else val 
     if reverse: return val,self
@@ -179,11 +194,13 @@ class Tensor:
     if isinstance(indices,Tensor): indices = indices.data 
     return F.Slice.apply(self,indices=indices)
 
+
   def __neg__(self): return self.neg()
   def __add__(self,x): return self.add(x)
   def __sub__(self,x): return self.sub(x)
   def __mul__(self,x): return self.mul(x)
   def __pow__(self,x): return self.pow(x)
+  def __eq__(self,x): return self.eq(x)
   def __matmul__(self,x): return self.dot(x)
   def __truediv__(self,x): return self.div(x)
 
