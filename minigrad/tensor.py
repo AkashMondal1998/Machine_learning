@@ -41,6 +41,8 @@ class Tensor:
 
   def __repr__(self): return f"Tensor({self.data},requires_grad={self.requires_grad})"
 
+  def __getitem__(self,indices): return F.Slice.apply(self,indices=indices)
+
   def add(self,x,reverse=False): return F.Add.apply(*self._const(x,reverse))
 
   def sub(self,x,reverse=False): return F.Sub.apply(*self._const(x,reverse))
@@ -118,7 +120,7 @@ class Tensor:
 
   @classmethod
   def eye(cls, n, m=None, requires_grad=False): return cls(np.eye(n, m, dtype=np.float32), requires_grad=requires_grad)
-
+  
   @classmethod
   def xavier_uniform(cls, in_features, out_features, requires_grad=False):
     range = np.sqrt(6 / (in_features + out_features))
@@ -132,12 +134,12 @@ class Tensor:
   def build_topo(self):
     nodes = list()
     visited = set()
-    def _build_topo(v):
-      if v not in visited:
-        visited.add(v)
-        if v._ctx:
-            for p in v._ctx.parents: _build_topo(p)
-            nodes.append(v)
+    def _build_topo(t):
+      if t not in visited:
+        visited.add(t)
+        if t._ctx:
+            for p in t._ctx.parents: _build_topo(p)
+            nodes.append(t)
     _build_topo(self)
     return nodes
 

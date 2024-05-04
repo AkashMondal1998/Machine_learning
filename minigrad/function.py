@@ -146,3 +146,15 @@ class Sigmoid(Function):
 
   def backward(self, grad_out):
     return self.ret * (1 - self.ret) * grad_out
+
+
+class Slice(Function):
+  def forward(self,x,indices):
+    self.x = x
+    self.indices = indices
+    return x[indices]
+  
+  def backward(self,grad_out):
+    grad_x = np.zeros_like(self.x)
+    grad_x[self.indices] = 1.0
+    return grad_x * expand(grad_out,1,self.x.shape)
