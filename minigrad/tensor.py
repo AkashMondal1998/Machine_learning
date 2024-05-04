@@ -21,8 +21,8 @@ import minigrad.function as F
 class Tensor:
   __slots__  = "data", "grad", "_ctx", "requires_grad"
 
-  def __init__(self, data, requires_grad=False):
-    self.data = np.array(data, dtype=np.float32)
+  def __init__(self, data, dtype=None, requires_grad=False):
+    self.data = np.array(data, dtype=dtype) if not isinstance(data,np.ndarray) else data
     self.grad = None
     self._ctx = None
     self.requires_grad = requires_grad
@@ -41,7 +41,7 @@ class Tensor:
 
   def __repr__(self): return f"Tensor({self.data},requires_grad={self.requires_grad})"
 
-  def __getitem__(self,indices): return F.Slice.apply(self,indices=indices)
+  def __len__(self): return len(self.data)
 
   def add(self,x,reverse=False): return F.Add.apply(*self._const(x,reverse))
 
@@ -110,16 +110,26 @@ class Tensor:
   def binary_crossentropy_withlogits(self,x):
     return (self.maximum(0) - (self * x) + (1 + self.abs().neg().exp()).log()).mean()
 
-  def sparse_categorical_crossentropy(self,x):
+  def sparse_categorical_crossentropy(self,y):
     # self is the raw logits 
-    # x is the one the one hot encoded vector
-    return self.log_softmax().neg().mul(x).sum(axis=1).mean()
+    self = self.log_softmax()
+    loss = self[Tensor.arange(len(y)), y].neg()
+    return loss.mean()
 
   @classmethod
   def zeros(cls, *shape): return cls(np.zeros(shape, dtype=np.float32))
 
   @classmethod
-  def eye(cls, n, m=None, requires_grad=False): return cls(np.eye(n, m, dtype=np.float32), requires_grad=requires_grad)
+  def arange(cls,start,stop=0,step=1,dtype=None,requires_grad=False):
+    if stop == 0: start,stop = stop,start
+    return cls(np.arange(start,stop,step,dtype=dtype),requires_grad=requires_grad)
+
+  @classmethod
+  def eye(cls, n, m=None, dtype=None, requires_grad=False): return cls(np.eye(n, m, dtype=dtype), requires_grad=requires_grad)
+
+  @classmethod
+  def randint(cls,low,high=None,size=None,dtype=int,requires_grad=False):
+    return cls(np.random.randint(low,high,size,dtype),requires_grad=requires_grad)
   
   @classmethod
   def xavier_uniform(cls, in_features, out_features, requires_grad=False):
@@ -157,11 +167,17 @@ class Tensor:
           t.grad = g if t.grad is None else (t.grad + g)
     return self
 
+  # handle the case where the dtype of the val does not match the dtype of the Tensor
   def _const(self,val,reverse):
     val = Tensor(np.full_like(self.data,val),requires_grad=False) if isinstance(val,(int,float)) else val 
     if reverse: return val,self
     else: return self,val
 
+  def __getitem__(self,indices):
+    if isinstance(indices,tuple) and isinstance(indices[0],Tensor): 
+      indices = tuple(t.data for t in indices)
+    if isinstance(indices,Tensor): indices = indices.data 
+    return F.Slice.apply(self,indices=indices)
 
   def __neg__(self): return self.neg()
   def __add__(self,x): return self.add(x)

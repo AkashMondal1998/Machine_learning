@@ -19,8 +19,7 @@ class Net(nn.Base):
 if __name__ == "__main__":
     dataset = DataSet("fashion_mnist")
     X_train,Y_train,X_test,Y_test = dataset.get_dataset()
-    Y_one_hot = np.eye(np.max(Y_train) + 1)[Y_train]
-    x_test = Tensor(X_test)
+    x_train,y_train,x_test = Tensor(X_train),Tensor(Y_train),Tensor(X_test)
     model = Net()
     optimizer = Adam(model.parameters())
     BS = 256
@@ -28,14 +27,12 @@ if __name__ == "__main__":
 
     for i in range(20):
         for _ in (t:=trange(num_iters)):
-            samp = np.random.randint(0,X_train.shape[0],size=(BS))
-            x = Tensor(X_train[samp])
-            y = Tensor(Y_one_hot[samp])
+            samp = Tensor.randint(x_train.shape[0],size=(BS))
             optimizer.zero_grad()
-            loss = model(x).sparse_categorical_crossentropy(y)
+            loss = model(x_train[samp]).sparse_categorical_crossentropy(y_train[samp])
             loss.backward()
             optimizer.step()
-            accuracy = (np.argmax(model(x).log_softmax().data,axis=1) == Y_train[samp]).mean()
+            accuracy = (np.argmax(model(x_train[samp]).log_softmax().data,axis=1) == y_train[samp].data).mean()
             t.set_description(f"epoch-->{i+1}  loss={loss.data:0.2f} accuracy={accuracy:0.2f}")
     
-    print(f"accuracy = {(np.argmax(model(x_test).log_softmax().data,axis=1) == Y_test).mean()*100}")
+    print(f"accuracy on test set = {(np.argmax(model(x_test).log_softmax().data,axis=1) == Y_test).mean()*100:0.2f}")

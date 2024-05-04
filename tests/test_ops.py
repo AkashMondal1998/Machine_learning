@@ -1,4 +1,5 @@
 from minigrad import Tensor
+import numpy as np
 import torch
 
 def test_add():  
@@ -48,7 +49,7 @@ def test_mul():
     assert (y.grad == m.grad.detach().numpy()).all()
 
 def test_div():
-    x,y = Tensor([1,2,4],requires_grad=True),Tensor([9,2,1],requires_grad=True)
+    x,y = Tensor([1,2,4],dtype=np.float32,requires_grad=True),Tensor([9,2,1],dtype=np.float32,requires_grad=True)
     d = x / y
     d = d.sum()
     d.backward()

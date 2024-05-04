@@ -36,8 +36,8 @@ class Div(Function):
     return x / y
 
   def backward(self, grad_out):
-    grad_x = self.y**-1
-    grad_y = self.x * -self.y**-2
+    grad_x =  self.y**-1
+    grad_y = -self.x *  self.y**-2
     return reduce(grad_x * grad_out,self.x.shape), reduce(grad_y * grad_out,self.y.shape)
 
 class Pow(Function):
@@ -150,9 +150,8 @@ class Sigmoid(Function):
 
 class Slice(Function):
   def forward(self,x,indices):
-    self.x = x
-    self.indices = indices
-    return x[indices]
+    self.x,self.indices = x,indices
+    return x[self.indices] 
   
   def backward(self,grad_out):
     grad_x = np.zeros_like(self.x)
