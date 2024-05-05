@@ -1,4 +1,3 @@
-import minigrad.function as F
 import numpy as np
 import math
 
@@ -17,6 +16,9 @@ class Function:
     ret = Tensor(ctx.forward(*[t.data for t in x], **kwargs), requires_grad=ctx.requires_grad)
     if ctx.requires_grad: ret._ctx = ctx
     return ret
+
+
+import minigrad.function as F  # noqa: F402
 
 
 class Tensor:
