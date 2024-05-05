@@ -65,6 +65,11 @@ class Tensor:
 
   def argmax(self,axis=None,keepdims=False): return Tensor(np.argmax(self.data,axis=axis,keepdims=keepdims))
 
+  def mean(self,axis=None,keempdims=False):
+    if axis == 1: return self.sum(axis=axis,keepdims=keempdims).div(self.shape[1])
+    elif axis == 0: return self.sum(axis=axis,keepdims=keempdims).div(self.shape[0])
+    else: return self.sum().div(self.size)
+
   def neg(self): return F.Neg.apply(self)
 
   def log(self): return F.Log.apply(self)
@@ -81,8 +86,6 @@ class Tensor:
   def matmul(self,x):
     assert self.ndim == x.ndim == 2, f"2D tensors are expected" 
     return self.dot(x)
-
-  def mean(self): return self.sum().div(self.size)
 
   def relu(self): return F.Relu.apply(self)
 
@@ -121,7 +124,7 @@ class Tensor:
     return loss.mean()
 
   def item(self):
-    assert self.shape == tuple()
+    assert self.shape == tuple(), "Only scalar tensors are allowed"
     return self.data.item()
 
   def _eq(x,y):
@@ -157,16 +160,13 @@ class Tensor:
     return cls(np.random.normal(0.0, scale, (in_features, out_features)), requires_grad=requires_grad)
 
   def build_topo(self):
-    nodes = list()
-    visited = set()
-    def _build_topo(t):
+    def _build_topo(t,visited):
       if t not in visited:
         visited.add(t)
         if t._ctx:
-            for p in t._ctx.parents: _build_topo(p)
-            nodes.append(t)
-    _build_topo(self)
-    return nodes
+            for p in t._ctx.parents: yield from _build_topo(p,visited)
+            yield t
+    return list(_build_topo(self,set()))
 
   def backward(self):
     assert self.data.shape == tuple(), "Backward can only be called on the scalar tensors"
