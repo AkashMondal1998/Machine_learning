@@ -155,3 +155,12 @@ class Slice(Function):
     grad_x = np.zeros_like(self.x)
     grad_x[self.indices] = 1.0
     return grad_x * expand(grad_out,1,self.x.shape)
+
+
+class Flatten(Function):
+  def forward(self,x):
+    self.x_shape = x.shape
+    return x.flatten() 
+  
+  def backward(self,grad_out):
+    return grad_out.reshape(self.x_shape)

@@ -1,4 +1,5 @@
 import numpy as np
+import math
 
 class Function:
   def __init__(self, *tensors):
@@ -76,6 +77,8 @@ class Tensor:
   
   def exp(self): return F.Exp.apply(self)
 
+  def flatten(self): return F.Flatten.apply(self)
+
   def sqrt(self): return self.pow(0.5)
 
   def dot(self, x):
@@ -135,7 +138,7 @@ class Tensor:
     return Tensor(t)
 
   @classmethod
-  def zeros(cls, *shape): return cls(np.zeros(shape, dtype=np.float32))
+  def zeros(cls, *shape,requires_grad=False): return cls(np.zeros(shape, dtype=np.float32),requires_grad=requires_grad)
 
   @classmethod
   def arange(cls,start,stop=0,step=1,dtype=None,requires_grad=False):
@@ -151,12 +154,12 @@ class Tensor:
   
   @classmethod
   def xavier_uniform(cls, in_features, out_features, requires_grad=False):
-    range = np.sqrt(6 / (in_features + out_features))
+    range = math.sqrt(6 / (in_features + out_features))
     return cls(np.random.uniform(-range, +range, (in_features, out_features)), requires_grad=requires_grad)
 
   @classmethod
   def xavier_normal(cls, in_features, out_features, requires_grad=False):
-    scale = np.sqrt(2 / (in_features + out_features))
+    scale = math.sqrt(2 / (in_features + out_features))
     return cls(np.random.normal(0.0, scale, (in_features, out_features)), requires_grad=requires_grad)
 
   def build_topo(self):
