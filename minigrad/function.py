@@ -93,8 +93,7 @@ class Sum(Function):
     return x.sum(axis=axis, keepdims=keepdims)
 
   def backward(self, grad_out):
-    ret = expand(grad_out, self.axis, self.x.shape) if self.axis else np.ones_like(self.x) * grad_out
-    return ret
+    return expand(grad_out, self.axis, self.x.shape)
 
 
 class Neg(Function):
