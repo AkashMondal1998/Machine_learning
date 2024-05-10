@@ -3,12 +3,13 @@ import minigrad.nn as nn
 from minigrad.nn import DataSet, Adam
 from tqdm import trange
 import math
+import numpy as np
 
 
 class Net(nn.Base):
   def __init__(self):
-    self.l1 = nn.Linear(784, 200)
-    self.l2 = nn.Linear(200, 10)
+    self.l1 = nn.Linear(784, 200, dtype=np.float32)
+    self.l2 = nn.Linear(200, 10, dtype=np.float32)
 
   def forward(self, x):
     x = self.l1(x).relu()

@@ -155,14 +155,14 @@ class Tensor:
     return cls(np.random.randint(low, high, size, dtype), requires_grad=requires_grad)
 
   @classmethod
-  def xavier_uniform(cls, in_features, out_features, requires_grad=False):
+  def xavier_uniform(cls, in_features, out_features, dtype=None, requires_grad=False):
     range = math.sqrt(6 / (in_features + out_features))
-    return cls(np.random.uniform(-range, +range, (in_features, out_features)), requires_grad=requires_grad)
+    return cls(np.random.uniform(-range, +range, (in_features, out_features)).astype(dtype), requires_grad=requires_grad)
 
   @classmethod
-  def xavier_normal(cls, in_features, out_features, requires_grad=False):
+  def xavier_normal(cls, in_features, out_features, dtype=None, requires_grad=False):
     scale = math.sqrt(2 / (in_features + out_features))
-    return cls(np.random.normal(0.0, scale, (in_features, out_features)), requires_grad=requires_grad)
+    return cls(np.random.normal(0.0, scale, (in_features, out_features)).astype(dtype), requires_grad=requires_grad)
 
   def build_topo(self):
     def _build_topo(t, visited):

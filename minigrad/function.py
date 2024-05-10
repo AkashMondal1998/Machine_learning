@@ -149,6 +149,8 @@ class Sigmoid(Function):
     return self.ret * (1 - self.ret) * grad_out
 
 
+# Todo: Inner slices and slices that result in scalar need to be done
+# For now it works for training
 class Slice(Function):
   def forward(self, x, indices):
     self.x, self.indices = x, indices
