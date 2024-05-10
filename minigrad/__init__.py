@@ -1,1 +1,2 @@
-from .tensor import Tensor  # noqa: F401
+from .tensor import Tensor
+from .dtypes import dtypes

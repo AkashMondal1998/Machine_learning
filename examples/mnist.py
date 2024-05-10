@@ -1,15 +1,14 @@
-from minigrad import Tensor
+import minigrad
 import minigrad.nn as nn
-from minigrad.nn import DataSet, Adam
+from minigrad import Tensor
 from tqdm import trange
 import math
-import numpy as np
 
 
 class Net(nn.Base):
   def __init__(self):
-    self.l1 = nn.Linear(784, 200, dtype=np.float32)
-    self.l2 = nn.Linear(200, 10, dtype=np.float32)
+    self.l1 = nn.Linear(784, 200, dtype=minigrad.dtypes.float32)
+    self.l2 = nn.Linear(200, 10, dtype=minigrad.dtypes.float32)
 
   def forward(self, x):
     x = self.l1(x).relu()
@@ -18,10 +17,10 @@ class Net(nn.Base):
 
 
 if __name__ == "__main__":
-  dataset = DataSet("mnist", to_tensor=True)
+  dataset = nn.DataSet("mnist", to_tensor=True)
   X_train, Y_train, X_test, Y_test = dataset.get_dataset()
   model = Net()
-  optimizer = Adam(model.parameters())
+  optimizer = nn.Adam(model.parameters())
   BS = 256
   num_iters = math.ceil(X_train.shape[0] / BS)
 

@@ -17,26 +17,6 @@ class Net(nn.Base):
         return x
 
 model = Net()
-
-# Get the Mnsit dataset
-dataset = DataSet("mnist",to_tensor=True)
-X_train,Y_train,X_test,Y_test = dataset.get_dataset()
-
-optimizer = Adam(model.parameters())
-
-BS = 256
-num_iters = math.ceil(X_train.shape[0] / BS)
-
-#Training
-for i in range(10):
-    for _ in (t:=trange(num_iters)):
-        samp = Tensor.randint(X_train.shape[0],size=(BS))
-        optimizer.zero_grad()
-        loss = model(X_train[samp]).sparse_categorical_crossentropy(Y_train[samp])
-        loss.backward()
-        optimizer.step()
-        accuracy = (model(X_train[samp]).log_softmax().argmax(axis=1) == Y_train[samp]).mean()
-        t.set_description(f"epoch-->{i+1}  loss={loss.item():0.2f} accuracy={accuracy.item():0.2f}")
 ```
 
 #### Mnist example
